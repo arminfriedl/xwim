@@ -1,0 +1,16 @@
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: build
+  image: arminfriedl/xwim-build
+  commands:
+    - meson build
+    - ninja -C build
+    - build/src/xwim ../compile-commands.json
+
+trigger:
+  event:
+    exclude:
+    - tag
