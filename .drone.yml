@@ -8,7 +8,6 @@ steps:
   commands:
     - meson build
     - ninja -C build
-    - build/src/xwim ../compile-commands.json
 
 trigger:
   event:

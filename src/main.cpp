@@ -1,3 +1,7 @@
+#include <spdlog/common.h>
+#include <spdlog/spdlog.h>
+namespace logger = spdlog;
+
 #include <iostream>
 #include <ostream>
 #include <string>
@@ -6,15 +10,17 @@
 #include "spec.hpp"
 
 int main(int argc, char** argv) {
-  std::string filename {argv[1]};
-  xwim::Archive archive {filename};
+  logger::set_level(logger::level::trace);
+  logger::flush_on(logger::level::trace);
 
-  xwim::ArchiveSpec asp = archive.check();
+  try {
+    std::string filename{argv[1]};
+    xwim::Archive archive{filename};
+    xwim::ArchiveSpec spec = archive.check();
 
-  std::cout << "Has subarch: " << asp.has_subarchive
-            << "Is root: " << asp.is_root_dir
-            << "Is root dir filename: " << asp.is_root_dir_filename
-            << std::endl;
+    logger::info("{}", spec);
 
-  archive.extract(xwim::ExtractSpec {.make_dir=true, .dirname="Test"});
+  } catch (xwim::ArchiveException& ae) {
+    logger::error("{}", ae.what());
+  }
 }
