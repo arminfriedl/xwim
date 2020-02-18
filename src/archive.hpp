@@ -19,7 +19,7 @@ class Archive {
   archive* xwim_archive;
 
  public:
-  explicit Archive(std::string path);
+  explicit Archive(std::filesystem::path path);
   ~Archive();
 
   ArchiveSpec check();

@@ -15,26 +15,6 @@ namespace logger = spdlog;
 
 namespace xwim {
 
-Archive::Archive(std::string path) : path{std::filesystem::path(path)} {
-  int r;  // libarchive error handling
-
-  logger::trace("Setting up archive reader");
-  this->xwim_archive = archive_read_new();
-  archive_read_support_filter_all(this->xwim_archive);
-  archive_read_support_format_all(this->xwim_archive);
-
-  logger::trace("Reading archive at {}", path.c_str());
-  r = archive_read_open_filename(this->xwim_archive, path.c_str(), 10240);
-  if (r != ARCHIVE_OK)
-    throw ArchiveException{"Could not open archive file", this->xwim_archive};
-
-  logger::trace("Archive read succesfully");
-}
-
-Archive::~Archive() {
-  archive_read_free(this->xwim_archive);
-}
-
 static archive_entry* _archive_next_entry(archive* archive) {
   int r;  // libarchive error handling
   archive_entry* entry;
@@ -46,6 +26,7 @@ static archive_entry* _archive_next_entry(archive* archive) {
   logger::trace("Got archive header");
   return entry;
 }
+
 static void _spec_is_root_filename(ArchiveSpec* spec,
                                    archive_entry* entry,
                                    std::filesystem::path* filepath) {
@@ -80,19 +61,21 @@ static void _spec_is_root_dir(ArchiveSpec* spec, archive_entry* entry) {
 static void _spec_has_single_root(ArchiveSpec* spec,
                                   archive_entry* first_entry,
                                   archive* archive) {
-
-  std::filesystem::path first_entry_root = *(std::filesystem::path{archive_entry_pathname(first_entry)}.begin());
+  std::filesystem::path first_entry_root =
+      *(std::filesystem::path{archive_entry_pathname(first_entry)}.begin());
   logger::trace("Testing roots");
 
   spec->has_single_root = true;
   archive_entry* entry;
   while (archive_read_next_header(archive, &entry) == ARCHIVE_OK) {
     std::filesystem::path next_entry{archive_entry_pathname(entry)};
-    logger::trace("Path: {}, Root: {}", next_entry.string(), next_entry.begin()->string());
+    logger::trace("Path: {}, Root: {}", next_entry.string(),
+                  next_entry.begin()->string());
 
     if (first_entry_root != *next_entry.begin()) {
       logger::debug("Archive has multiple roots");
-      logger::debug("\t-> Archive root I: {}", first_entry_root.begin()->string());
+      logger::debug("\t-> Archive root I: {}",
+                    first_entry_root.begin()->string());
       logger::debug("\t-> Archive root II: {}", next_entry.begin()->string());
 
       spec->has_single_root = false;
@@ -101,6 +84,26 @@ static void _spec_has_single_root(ArchiveSpec* spec,
   }
   if (spec->has_single_root)
     logger::debug("Archive has single root: {}", first_entry_root.string());
+}
+
+Archive::Archive(std::filesystem::path path) : path{path} {
+  int r;  // libarchive error handling
+
+  logger::trace("Setting up archive reader");
+  this->xwim_archive = archive_read_new();
+  archive_read_support_filter_all(this->xwim_archive);
+  archive_read_support_format_all(this->xwim_archive);
+
+  logger::trace("Reading archive at {}", path.c_str());
+  r = archive_read_open_filename(this->xwim_archive, path.c_str(), 10240);
+  if (r != ARCHIVE_OK)
+    throw ArchiveException{"Could not open archive file", this->xwim_archive};
+
+  logger::trace("Archive read succesfully");
+}
+
+Archive::~Archive() {
+  archive_read_free(this->xwim_archive);
 }
 
 ArchiveSpec Archive::check() {
@@ -113,6 +116,7 @@ ArchiveSpec Archive::check() {
     logger::debug("Archive is empty");
     return {false, false, false};
   }
+
   logger::trace("Found archive entry {}", archive_entry_pathname(first_entry));
 
   _spec_is_root_filename(&archive_spec, first_entry, &this->path);
@@ -121,5 +125,7 @@ ArchiveSpec Archive::check() {
 
   return archive_spec;
 }
+
+void Archive::extract(ExtractSpec extract_spec) {}
 
 }  // namespace xwim

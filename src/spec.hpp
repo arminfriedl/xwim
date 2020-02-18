@@ -17,8 +17,9 @@ struct ArchiveSpec {
 };
 
 struct ExtractSpec {
-  bool make_dir;
-  std::filesystem::path dirname;
+  bool make_dir = false;
+  std::filesystem::path dirname{};
+  bool extract_subarchive = false;
 };
 
 }  // namespace xwim
@@ -37,6 +38,22 @@ struct fmt::formatter<xwim::ArchiveSpec> {
                      " ]",
                      spec.has_single_root, spec.is_root_filename,
                      spec.is_root_dir, spec.has_subarchive);
+  }
+};
+
+template <>
+struct fmt::formatter<xwim::ExtractSpec> {
+  constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
+
+  template <typename FormatContext>
+  auto format(const xwim::ExtractSpec& spec, FormatContext& ctx) {
+    return format_to(ctx.out(),
+                     "ExtractSpec["
+                     " .make_dir={},"
+                     " .dirname={}"
+                     " .extract_subarchive={}"
+                     " ]",
+                     spec.make_dir, spec.dirname, spec.extract_subarchive);
   }
 };
 

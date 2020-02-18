@@ -14,11 +14,30 @@ int main(int argc, char** argv) {
   logger::flush_on(logger::level::trace);
 
   try {
-    std::string filename{argv[1]};
-    xwim::Archive archive{filename};
-    xwim::ArchiveSpec spec = archive.check();
+    std::filesystem::path filepath{argv[1]};
+    xwim::Archive archive{filepath};
+    xwim::ArchiveSpec archive_spec = archive.check();
 
-    logger::info("{}", spec);
+    logger::info("{}", archive_spec);
+
+    xwim::ExtractSpec extract_spec{};
+
+    if (!archive_spec.has_single_root || !archive_spec.is_root_filename) {
+      extract_spec.make_dir = true;
+
+      std::filesystem::path stem = filepath.stem();
+
+      while (stem.has_extension())
+        stem = stem.stem();
+
+      extract_spec.dirname = stem;
+    }
+
+    if (archive_spec.has_subarchive) {
+      extract_spec.extract_subarchive = true;
+    }
+
+    archive.extract(extract_spec);
 
   } catch (xwim::ArchiveException& ae) {
     logger::error("{}", ae.what());
