@@ -37,6 +37,8 @@ int main(int argc, char** argv) {
       extract_spec.extract_subarchive = true;
     }
 
+    logger::info("{}", extract_spec);
+
     archive.extract(extract_spec);
 
   } catch (xwim::ArchiveException& ae) {

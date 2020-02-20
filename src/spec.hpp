@@ -47,13 +47,12 @@ struct fmt::formatter<xwim::ExtractSpec> {
 
   template <typename FormatContext>
   auto format(const xwim::ExtractSpec& spec, FormatContext& ctx) {
-    return format_to(ctx.out(),
-                     "ExtractSpec["
+    return format_to(ctx.out(), "Extract["
                      " .make_dir={},"
                      " .dirname={}"
                      " .extract_subarchive={}"
                      " ]",
-                     spec.make_dir, spec.dirname, spec.extract_subarchive);
+                     spec.make_dir, spec.dirname.string(), spec.extract_subarchive);
   }
 };
 

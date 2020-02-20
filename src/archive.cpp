@@ -1,5 +1,6 @@
 #include <spdlog/spdlog.h>
 #include <sys/stat.h>
+
 namespace logger = spdlog;
 
 #include <archive.h>
@@ -126,6 +127,22 @@ ArchiveSpec Archive::check() {
   return archive_spec;
 }
 
-void Archive::extract(ExtractSpec extract_spec) {}
+static void _extract_make_dir(ExtractSpec extract_spec,
+                              archive* archive) {
+  if (extract_spec.make_dir) {
+    try {
+      logger::trace("Creating directory {}", extract_spec.dirname.string());
+      std::filesystem::create_directories(extract_spec.dirname);
+    } catch (std::filesystem::filesystem_error& err) {
+      throw ArchiveException{err.what(), archive};
+    } catch (std::bad_alloc& err) {
+      throw ArchiveException{err.what(), archive};
+    }
+  }
+}
+
+void Archive::extract(ExtractSpec extract_spec) {
+  _extract_make_dir(extract_spec, this->xwim_archive);
+}
 
 }  // namespace xwim

@@ -23,7 +23,7 @@ class Archive {
   ~Archive();
 
   ArchiveSpec check();
-  void extract(ExtractSpec normalize_spec);
+  void extract(ExtractSpec extract_spec);
 };
 
 class ArchiveException : public std::exception {
