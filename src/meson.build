@@ -1,6 +1,9 @@
-src = ['main.cpp', 'archive.cpp']
+src = ['main.cpp',
+       'archive.cpp',
+       'archive_sys.cpp']
 inc = ['archive.hpp',
-       'spec.hpp']
+       'spec.hpp',
+       'archive_sys.hpp']
 
 libs = [dependency('libarchive', required: true),
         dependency('fmt', required: true),
