@@ -7,22 +7,13 @@
 
 namespace xwim {
 
-class ArchiveEntrySys {
+class ArchiveEntryView {
  private:
-  std::function<void (archive_entry*)> ae_deleter = [](archive_entry* ae) { archive_entry_free(ae); };
-  std::unique_ptr<archive_entry, decltype(ae_deleter)> ae;
-  friend class ArchiveExtractorSys;
+  archive_entry* ae;
 
  public:
-  ArchiveEntrySys(std::unique_ptr<archive_entry> entry)
-    : ae{ std::unique_ptr<archive_entry, decltype(ae_deleter)>{entry.release(), ae_deleter} }
-  {}
-  ArchiveEntrySys()
-    : ae{ std::unique_ptr<archive_entry, decltype(ae_deleter)>{nullptr, ae_deleter} }
-  {}
-  ArchiveEntrySys(archive_entry* entry)
-    : ae{ std::unique_ptr<archive_entry, decltype(ae_deleter)>{entry, ae_deleter} }
-  {}
+  ArchiveEntryView() = default;
+  ArchiveEntryView(archive_entry* entry) : ae{entry} {}
 
   bool is_empty();
   std::string path_name();
@@ -39,24 +30,31 @@ class ArchiveEntrySys {
 class ArchiveReaderSys {
  private:
   archive* ar;
-  ArchiveEntrySys cur_entry;
+  archive_entry* ae;
   friend class ArchiveExtractorSys;
 
  public:
   ArchiveReaderSys(std::filesystem::path& path);
   ~ArchiveReaderSys();
 
-  /** Returns the next archive entry
+  /** Advances the internal entry pointer
    *
-   * @return archive_entry or nullptr if end of archive reached
+   * @return true if the pointer advanced to the next entry
+   *         false if the end of the archive was reached
    */
-  ArchiveEntrySys& next();
+  bool advance();
 
-  /** Returns the current archive entry
+  /** Returns a non-owning view of the current entry
    *
-   * @return archive_entry or nullptr if current entry at end of archive
+   * ArchiveEntryView is a non-owning view of the currently
+   * active entry in this reader. A retrieved archive entry
+   * may not be used after another call to advance in the
+   * same reader.
+   *
+   * @return a view to the archive entry this reader currently
+   *         points to
    */
-  ArchiveEntrySys& cur();
+  const ArchiveEntryView cur();
 };
 
 /** A extractor for archive files
@@ -64,17 +62,15 @@ class ArchiveReaderSys {
  * Shim for `libarchive`.
  */
 class ArchiveExtractorSys {
-private:
+ private:
   archive* writer;
-public:
+
+ public:
   ArchiveExtractorSys(std::filesystem::path& root);
   ArchiveExtractorSys();
 
-  void extract(ArchiveReaderSys& reader, ArchiveEntrySys& entry);
   void extract_all(ArchiveReaderSys& reader);
-
-  void extract_header(ArchiveEntrySys& entry);
-  void extract_data();
+  void extract_entry(ArchiveReaderSys& reader);
 };
 
 class ArchiveSysException : public std::exception {
@@ -89,9 +85,7 @@ class ArchiveSysException : public std::exception {
       _what = fmt::format("{}", what);
     }
   }
-  ArchiveSysException(std::string what) {
-      _what = fmt::format("{}", what);
-  }
+  ArchiveSysException(std::string what) { _what = fmt::format("{}", what); }
 
   virtual const char* what() const noexcept { return this->_what.c_str(); }
 };

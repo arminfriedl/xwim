@@ -5,13 +5,13 @@ namespace logger = spdlog;
 #include <iostream>
 #include <ostream>
 #include <string>
+#include <list>
 
 #include "archive.hpp"
 #include "spec.hpp"
 
 int main(int argc, char** argv) {
   logger::set_level(logger::level::trace);
-  logger::flush_on(logger::level::trace);
 
   try {
     std::filesystem::path filepath{argv[1]};

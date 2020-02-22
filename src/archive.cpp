@@ -18,7 +18,7 @@ namespace logger = spdlog;
 namespace xwim {
 
 static void _spec_is_root_filename(ArchiveSpec* spec,
-                                   ArchiveEntrySys& entry,
+                                   ArchiveEntryView entry,
                                    std::filesystem::path* filepath) {
   auto entry_path = entry.path();
   auto norm_stem = filepath->filename();
@@ -37,7 +37,7 @@ static void _spec_is_root_filename(ArchiveSpec* spec,
   logger::debug("\t-> Archive stem: {}", norm_stem.string());
 }
 
-static void _spec_is_root_dir(ArchiveSpec* spec, ArchiveEntrySys& entry) {
+static void _spec_is_root_dir(ArchiveSpec* spec, ArchiveEntryView entry) {
   if (entry.is_directory()) {
     logger::debug("Archive root is directory");
     spec->is_root_dir = true;
@@ -49,16 +49,15 @@ static void _spec_is_root_dir(ArchiveSpec* spec, ArchiveEntrySys& entry) {
 }
 
 static void _spec_has_single_root(ArchiveSpec* spec,
-                                  ArchiveEntrySys& first_entry,
+                                  ArchiveEntryView first_entry,
                                   ArchiveReaderSys& archive_reader) {
   std::filesystem::path first_entry_root = *(first_entry.path().begin());
   logger::trace("Testing roots");
 
   spec->has_single_root = true;
 
-  while (true) {
-    ArchiveEntrySys& entry = archive_reader.next();
-    if(entry.is_empty()) break;
+  while (archive_reader.advance()) {
+    ArchiveEntryView entry = archive_reader.cur();
 
     auto next_entry = entry.path();
     logger::trace("Path: {}, Root: {}", next_entry.string(),
@@ -92,12 +91,12 @@ ArchiveSpec Archive::check() {
 
   ArchiveSpec archive_spec;
 
-  ArchiveEntrySys& first_entry = archive_reader.next();
-
-  if (first_entry.is_empty()) {  // archive is empty
+  if (!archive_reader.advance()) { // can't advance even once, archive is empty
     logger::debug("Archive is empty");
     return {false, false, false};
   }
+
+  ArchiveEntryView first_entry = archive_reader.cur();
 
   logger::trace("Found archive entry {}", first_entry.path_name());
 
@@ -109,6 +108,9 @@ ArchiveSpec Archive::check() {
 }
 
 void Archive::extract(ExtractSpec extract_spec) {
+  std::filesystem::path abs_path = std::filesystem::absolute(this->path);
+  ArchiveReaderSys reader{abs_path};
+
   ArchiveExtractorSys extractor;
 
   if(extract_spec.make_dir) {
@@ -118,7 +120,6 @@ void Archive::extract(ExtractSpec extract_spec) {
     extractor = ArchiveExtractorSys{};
   }
 
-  ArchiveReaderSys reader{this->path};
   extractor.extract_all(reader);
 }
 
