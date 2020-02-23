@@ -16,11 +16,9 @@ namespace xwim {
 class Archive {
  private:
   std::filesystem::path path;
-  archive* xwim_archive;
 
  public:
   explicit Archive(std::filesystem::path path);
-  ~Archive();
 
   ArchiveSpec check();
   void extract(ExtractSpec extract_spec);

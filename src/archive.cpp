@@ -80,10 +80,6 @@ static void _spec_has_single_root(ArchiveSpec* spec,
 
 Archive::Archive(std::filesystem::path path) : path{path} {}
 
-Archive::~Archive() {
-  archive_read_free(this->xwim_archive);
-}
-
 ArchiveSpec Archive::check() {
   logger::trace("Creating archive spec for {}", this->path.string());
 
@@ -109,18 +105,18 @@ ArchiveSpec Archive::check() {
 
 void Archive::extract(ExtractSpec extract_spec) {
   std::filesystem::path abs_path = std::filesystem::absolute(this->path);
-  ArchiveReaderSys reader{abs_path};
-
-  ArchiveExtractorSys extractor;
 
   if(extract_spec.make_dir) {
+    ArchiveExtractorSys extractor{ArchiveExtractorSys{extract_spec.dirname}};
     logger::trace("Creating extract directory {}", extract_spec.dirname.string());
-    extractor = ArchiveExtractorSys{extract_spec.dirname};
+    ArchiveReaderSys reader{abs_path};
+    extractor.extract_all(reader);
   } else {
-    extractor = ArchiveExtractorSys{};
+    ArchiveExtractorSys extractor{};
+    logger::trace("Creating extract directory {}", extract_spec.dirname.string());
+    ArchiveReaderSys reader{abs_path};
+    extractor.extract_all(reader);
   }
-
-  extractor.extract_all(reader);
 }
 
 }  // namespace xwim

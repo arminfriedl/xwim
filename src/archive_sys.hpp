@@ -68,6 +68,7 @@ class ArchiveExtractorSys {
  public:
   ArchiveExtractorSys(std::filesystem::path& root);
   ArchiveExtractorSys();
+  ~ArchiveExtractorSys();
 
   void extract_all(ArchiveReaderSys& reader);
   void extract_entry(ArchiveReaderSys& reader);

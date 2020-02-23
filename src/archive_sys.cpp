@@ -49,7 +49,10 @@ xwim::ArchiveReaderSys::ArchiveReaderSys(std::filesystem::path& path) {
 }
 
 xwim::ArchiveReaderSys::~ArchiveReaderSys() {
-  archive_free(this->ar);
+  logger::trace("Destructing ArchiveReaderSys");
+
+  if (this->ae) archive_entry_free(this->ae);
+  if (this->ar) archive_read_free(this->ar);
 }
 
 bool xwim::ArchiveReaderSys::advance() {
@@ -69,14 +72,18 @@ const xwim::ArchiveEntryView xwim::ArchiveReaderSys::cur() {
 }
 
 xwim::ArchiveExtractorSys::ArchiveExtractorSys(std::filesystem::path& root) {
-    std::filesystem::create_directories(root);
-    std::filesystem::current_path(root);
+  logger::trace("Constructing ArchiveExtractorSys with path {}", root.string());
 
-    this->writer = archive_write_disk_new();
-    archive_write_disk_set_standard_lookup(this->writer);
+  std::filesystem::create_directories(root);
+  std::filesystem::current_path(root);
+
+  this->writer = archive_write_disk_new();
+  archive_write_disk_set_standard_lookup(this->writer);
 }
 
 xwim::ArchiveExtractorSys::ArchiveExtractorSys() {
+  logger::trace("Construction ArchiveExtractorSys without root");
+
   this->writer = archive_write_disk_new();
   archive_write_disk_set_standard_lookup(this->writer);
 }
@@ -90,7 +97,7 @@ void xwim::ArchiveExtractorSys::extract_all(xwim::ArchiveReaderSys& reader) {
 // forward declared
 static int copy_data(struct archive* ar, struct archive* aw);
 
-void xwim:: ArchiveExtractorSys::extract_entry(xwim::ArchiveReaderSys& reader) {
+void xwim::ArchiveExtractorSys::extract_entry(xwim::ArchiveReaderSys& reader) {
   int r;
   r = archive_write_header(this->writer, reader.ae);
   if (r != ARCHIVE_OK) {
@@ -103,6 +110,14 @@ void xwim:: ArchiveExtractorSys::extract_entry(xwim::ArchiveReaderSys& reader) {
   }
 }
 
+xwim::ArchiveExtractorSys::~ArchiveExtractorSys(){
+  logger::trace("Destructing ArchiveExtractorSys");
+  if(this->writer) {
+    archive_write_close(this->writer);
+    archive_write_free(this->writer);
+  }
+}
+
 static int copy_data(struct archive* ar, struct archive* aw) {
   int r;
   const void* buff;
@@ -111,8 +126,9 @@ static int copy_data(struct archive* ar, struct archive* aw) {
 
   for (;;) {
     r = archive_read_data_block(ar, &buff, &size, &offset);
-    if (r == ARCHIVE_EOF)
+    if (r == ARCHIVE_EOF) {
       return (ARCHIVE_OK);
+    }
     if (r != ARCHIVE_OK) {
       return (r);
     }
