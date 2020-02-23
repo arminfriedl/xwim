@@ -20,20 +20,20 @@ type: docker
 name: release
 
 steps:
-- name: build-musl
+- name: build
   image: arminfriedl/xwim-build
   commands:
-    - LDFLAGS="-static-libstdc++ -static-libgcc" meson --buildtype=release build
+    - meson --buildtype=release build
     - ninja -C build
-    - mkdir xwim-${DRONE_TAG}-x86_64-musl-linux
-    - mv build/src/xwim xwim-${DRONE_TAG}-x86_64-musl-linux
+    - mkdir xwim-${DRONE_TAG}-x86_64-glibc-linux
+    - mv build/src/xwim xwim-${DRONE_TAG}-x86_64-glibc-linux
 
 - name: package
   image: arminfriedl/xwim-build
   commands:
-    - tar cjf xwim-${DRONE_TAG}-x86_64-musl-linux.tar.bz2 xwim-${DRONE_TAG}-x86_64-musl-linux/xwim
-    - tar czf xwim-${DRONE_TAG}-x86_64-musl-linux.tar.gz xwim-${DRONE_TAG}-x86_64-musl-linux/xwim
-    - zip -r xwim-${DRONE_TAG}-x86_64-musl-linux.zip xwim-${DRONE_TAG}-x86_64-musl-linux
+    - tar cjf xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.bz2 xwim-${DRONE_TAG}-x86_64-glibc-linux/xwim
+    - tar czf xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.gz xwim-${DRONE_TAG}-x86_64-glibc-linux/xwim
+    - zip -r xwim-${DRONE_TAG}-x86_64-glibc-linux.zip xwim-${DRONE_TAG}-x86_64-glibc-linux
 
 - name: publish
   image: plugins/gitea-release
@@ -42,9 +42,9 @@ steps:
     api_key:
       from_secret: gitea_token
     files:
-      - xwim-${DRONE_TAG}-x86_64-musl-linux.tar.bz2
-      - xwim-${DRONE_TAG}-x86_64-musl-linux.tar.gz
-      - xwim-${DRONE_TAG}-x86_64-musl-linux.zip
+      - xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.bz2
+      - xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.gz
+      - xwim-${DRONE_TAG}-x86_64-glibc-linux.zip
     title: xwim ${DRONE_TAG}
     checksum:
       - md5

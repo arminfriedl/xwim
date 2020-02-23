@@ -8,7 +8,7 @@ inc = ['archive.hpp',
        'fileformats.hpp']
 
 libs = [dependency('libarchive', required: true),
-        dependency('fmt', required: true),
-        dependency('spdlog', required: true)]
+        dependency('fmt', required: true, static: true),
+        dependency('spdlog', required: true, static: true)]
 
 executable('xwim', src, inc, dependencies: libs)
