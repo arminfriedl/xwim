@@ -1,5 +1,4 @@
-#ifndef SPEC_H
-#define SPEC_H
+#pragma once
 
 #include <archive.h>
 #include <fmt/core.h>
@@ -55,5 +54,3 @@ struct fmt::formatter<xwim::ExtractSpec> {
                      spec.make_dir, spec.dirname.string(), spec.extract_subarchive);
   }
 };
-
-#endif

@@ -9,6 +9,7 @@ namespace logger = spdlog;
 
 #include "archive.hpp"
 #include "spec.hpp"
+#include "fileformats.hpp"
 
 int main(int argc, char** argv) {
   logger::set_level(logger::level::trace);
@@ -25,10 +26,7 @@ int main(int argc, char** argv) {
     if (!archive_spec.has_single_root || !archive_spec.is_root_filename) {
       extract_spec.make_dir = true;
 
-      std::filesystem::path stem = filepath.stem();
-
-      while (stem.has_extension())
-        stem = stem.stem();
+      std::filesystem::path stem = xwim::stem(filepath);
 
       extract_spec.dirname = stem;
     }

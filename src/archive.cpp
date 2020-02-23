@@ -14,6 +14,7 @@ namespace logger = spdlog;
 #include "archive_sys.hpp"
 #include "archive.hpp"
 #include "spec.hpp"
+#include "fileformats.hpp"
 
 namespace xwim {
 
@@ -22,9 +23,7 @@ static void _spec_is_root_filename(ArchiveSpec* spec,
                                    std::filesystem::path* filepath) {
   auto entry_path = entry.path();
   auto norm_stem = filepath->filename();
-
-  while (norm_stem.has_extension())
-    norm_stem = norm_stem.stem();
+  norm_stem = xwim::stem(norm_stem);
 
   if (*entry_path.begin() != norm_stem) {
     logger::debug("Archive root does not match archive name");

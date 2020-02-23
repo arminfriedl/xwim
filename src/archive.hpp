@@ -1,5 +1,4 @@
-#ifndef ARCHIVE_H
-#define ARCHIVE_H
+#pragma once
 
 #include <archive.h>
 #include <fmt/format.h>
@@ -42,5 +41,3 @@ class ArchiveException : public std::exception {
 };
 
 }  // namespace xwim
-
-#endif

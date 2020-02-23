@@ -1,9 +1,11 @@
 src = ['main.cpp',
        'archive.cpp',
        'archive_sys.cpp']
+
 inc = ['archive.hpp',
        'spec.hpp',
-       'archive_sys.hpp']
+       'archive_sys.hpp',
+       'fileformats.hpp']
 
 libs = [dependency('libarchive', required: true),
         dependency('fmt', required: true),
