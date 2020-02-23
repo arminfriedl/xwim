@@ -20,19 +20,20 @@ type: docker
 name: release
 
 steps:
-- name: build
+- name: build-musl
   image: arminfriedl/xwim-build
   commands:
-    - meson --buildtype release build
+    - LDFLAGS="-static-libstdc++ -static-libgcc" meson --buildtype=release build
     - ninja -C build
-    - mkdir xwim-${DRONE_TAG}-x86_64-linux
-    - mv build/src/xwim xwim-${DRONE_TAG}-x86_64-linux
+    - mkdir xwim-${DRONE_TAG}-x86_64-musl-linux
+    - mv build/src/xwim xwim-${DRONE_TAG}-x86_64-musl-linux
 
 - name: package
   image: arminfriedl/xwim-build
   commands:
-    - tar cjf xwim-${DRONE_TAG}-x86_64-linux.tar.bz2 xwim-${DRONE_TAG}-x86_64-linux/xwim
-    - tar czf xwim-${DRONE_TAG}-x86_64-linux.tar.gz xwim-${DRONE_TAG}-x86_64-linux/xwim
+    - tar cjf xwim-${DRONE_TAG}-x86_64-musl-linux.tar.bz2 xwim-${DRONE_TAG}-x86_64-musl-linux/xwim
+    - tar czf xwim-${DRONE_TAG}-x86_64-musl-linux.tar.gz xwim-${DRONE_TAG}-x86_64-musl-linux/xwim
+    - zip -r xwim-${DRONE_TAG}-x86_64-musl-linux.zip xwim-${DRONE_TAG}-x86_64-musl-linux
 
 - name: publish
   image: plugins/gitea-release
@@ -41,10 +42,10 @@ steps:
     api_key:
       from_secret: gitea_token
     files:
-      - xwim-${DRONE_TAG}-x86_64-linux.tar.bz2
-      - xwim-${DRONE_TAG}-x86_64-linux.tar.gz
+      - xwim-${DRONE_TAG}-x86_64-musl-linux.tar.bz2
+      - xwim-${DRONE_TAG}-x86_64-musl-linux.tar.gz
+      - xwim-${DRONE_TAG}-x86_64-musl-linux.zip
     title: xwim ${DRONE_TAG}
-    note: CHANGELOG.md
     checksum:
       - md5
       - sha256
