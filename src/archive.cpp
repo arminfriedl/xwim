@@ -106,17 +106,17 @@ ArchiveSpec Archive::check() {
 void Archive::extract(ExtractSpec extract_spec) {
   std::filesystem::path abs_path = std::filesystem::absolute(this->path);
 
+  std::unique_ptr<ArchiveExtractorSys> extractor;
+
   if(extract_spec.make_dir) {
-    ArchiveExtractorSys extractor{ArchiveExtractorSys{extract_spec.dirname}};
     logger::trace("Creating extract directory {}", extract_spec.dirname.string());
-    ArchiveReaderSys reader{abs_path};
-    extractor.extract_all(reader);
+    extractor = std::unique_ptr<ArchiveExtractorSys>(new ArchiveExtractorSys{extract_spec.dirname});
   } else {
-    ArchiveExtractorSys extractor{};
-    logger::trace("Creating extract directory {}", extract_spec.dirname.string());
-    ArchiveReaderSys reader{abs_path};
-    extractor.extract_all(reader);
+    extractor = std::unique_ptr<ArchiveExtractorSys>(new ArchiveExtractorSys{});
   }
+
+  ArchiveReaderSys reader{abs_path};
+  extractor->extract_all(reader);
 }
 
 }  // namespace xwim

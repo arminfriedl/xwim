@@ -1,5 +1,6 @@
 .clangd/
 build/
+target/
 compile_commands.json
 
 # Created by https://www.gitignore.io/api/vim,c++,emacs,ninja

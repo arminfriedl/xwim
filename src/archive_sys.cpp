@@ -79,6 +79,8 @@ xwim::ArchiveExtractorSys::ArchiveExtractorSys(std::filesystem::path& root) {
 
   this->writer = archive_write_disk_new();
   archive_write_disk_set_standard_lookup(this->writer);
+
+  logger::trace("Constructed ArchiveExtractorSys at {:p}", (void*) this->writer);
 }
 
 xwim::ArchiveExtractorSys::ArchiveExtractorSys() {
@@ -86,6 +88,7 @@ xwim::ArchiveExtractorSys::ArchiveExtractorSys() {
 
   this->writer = archive_write_disk_new();
   archive_write_disk_set_standard_lookup(this->writer);
+  logger::trace("Constructed ArchiveExtractorSys at {:p}", (void*) this->writer);
 }
 
 void xwim::ArchiveExtractorSys::extract_all(xwim::ArchiveReaderSys& reader) {
@@ -111,7 +114,7 @@ void xwim::ArchiveExtractorSys::extract_entry(xwim::ArchiveReaderSys& reader) {
 }
 
 xwim::ArchiveExtractorSys::~ArchiveExtractorSys(){
-  logger::trace("Destructing ArchiveExtractorSys");
+  logger::trace("Destructing ArchiveExtractorSys at {:p}", (void*) this->writer);
   if(this->writer) {
     archive_write_close(this->writer);
     archive_write_free(this->writer);
