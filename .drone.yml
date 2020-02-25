@@ -6,8 +6,14 @@ steps:
 - name: build
   image: arminfriedl/xwim-build
   commands:
+    - meson wrap install gtest
     - meson build
     - ninja -C build
+    - ninja -C build test && ninja -C build coverage
+    - echo "******** TEST LOGS ***********"
+    - cat build/meson-logs/testlog.txt
+    - echo "****** COVERAGE LOGS *********"
+    - cat build/meson-logs/coverage.txt
 
 trigger:
   event:
@@ -23,6 +29,7 @@ steps:
 - name: build
   image: arminfriedl/xwim-build
   commands:
+    - meson wrap install gtest
     - meson --buildtype=release build
     - ninja -C build
     - mkdir xwim-${DRONE_TAG}-x86_64-glibc-linux

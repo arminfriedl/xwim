@@ -4,9 +4,16 @@
 
 #include <filesystem>
 #include <memory>
+#include <fmt/format.h>
 
 namespace xwim {
 
+/** A view into an archive entry
+ *
+ * The view is non-owning and the caller must guarantee
+ * that the parent archive entry is valid when the view
+ * is accessed.
+ */
 class ArchiveEntryView {
  private:
   archive_entry* ae;

@@ -14,7 +14,7 @@ else
 endif
 
 cdata.set('PROJECT_NAME', meson.project_name())
-cdata.set('PROJECT_SRCDIR', join_paths(meson.current_source_dir(),'..','src',meson.project_name()))
+cdata.set('PROJECT_SRCDIR', join_paths(meson.current_source_dir(),'..','src'))
 cdata.set('PROJECT_DOCDIR', meson.current_source_dir())
 cdata.set('PROJECT_TESTDIR', join_paths(meson.current_source_dir(),'..','test'))
 

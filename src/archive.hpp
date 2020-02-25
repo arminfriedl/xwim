@@ -12,6 +12,7 @@
 
 namespace xwim {
 
+/** Class for interacting with archives */
 class Archive {
  private:
   std::filesystem::path path;
@@ -19,7 +20,13 @@ class Archive {
  public:
   explicit Archive(std::filesystem::path path);
 
+  /** Generate an ArchiveSpec by analysing the archive at `path`
+   *
+   * @returns ArchiveSpec for the archive
+   */
   ArchiveSpec check();
+
+  /** Extract the archive at `path` according to given ExtractSpec */
   void extract(ExtractSpec extract_spec);
 };
 
