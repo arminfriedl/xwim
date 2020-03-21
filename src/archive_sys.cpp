@@ -51,7 +51,6 @@ xwim::ArchiveReaderSys::ArchiveReaderSys(std::filesystem::path& path) {
 xwim::ArchiveReaderSys::~ArchiveReaderSys() {
   logger::trace("Destructing ArchiveReaderSys");
 
-  if (this->ae) archive_entry_free(this->ae);
   if (this->ar) archive_read_free(this->ar);
 }
 
