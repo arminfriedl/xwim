@@ -2,6 +2,8 @@
 build/
 target/
 compile_commands.json
+.vscode
+.ccls-cache
 
 # Created by https://www.gitignore.io/api/vim,c++,emacs,ninja
 # Edit at https://www.gitignore.io/?templates=vim,c++,emacs,ninja

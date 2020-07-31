@@ -25,10 +25,13 @@ doxyfile = configure_file(input: 'Doxyfile.in',
 
 datadir = join_paths(get_option('datadir'), 'doc','xwim')
 
-html_target = custom_target('doc',
-			    build_always_stale : not meson.is_subproject(),
-                            input: doxyfile,
-                            output: 'html',
-                            command: [doxygen, doxyfile],
-                            install: not meson.is_subproject(),
-                            install_dir: datadir)
+# Must be disabled for now until https://github.com/mesonbuild/meson/pull/7458
+# lands
+# html_target = custom_target('doc',
+#                             build_always_stale : not meson.is_subproject(),
+#                             input: doxyfile,
+#                             output: 'html',
+#                             command: [doxygen, '@INPUT@'],
+#                             install: not meson.is_subproject(),
+#                             install_dir: datadir,
+#                             compilers: doxygen)
