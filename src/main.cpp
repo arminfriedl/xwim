@@ -1,6 +1,5 @@
 #include <spdlog/common.h>
 #include <cstdlib>
-namespace logger = spdlog;
 
 #include <iostream>
 #include <ostream>
@@ -13,19 +12,10 @@ namespace logger = spdlog;
 #include "spec.hpp"
 #include "fileformats.hpp"
 
-int main(int argc, char** argv) {
-  xwim::log::init();
+namespace logger = spdlog;
+using namespace xwim::argparse;
 
-  xwim::argparse::XwimPath xwim_path;
-
-  try {
-    xwim_path = xwim::argparse::parse(argc, argv);
-  } catch (xwim::argparse::ArgParseException& ex) {
-    logger::error("{}\n", ex.what());
-    std::cout << xwim::argparse::usage();
-    std::exit(1);
-  }
-
+void extract(const XwimPath& xwim_path) {
   try {
     xwim::Archive archive{xwim_path.path()};
     xwim::ArchiveSpec archive_spec = archive.check();
@@ -53,4 +43,27 @@ int main(int argc, char** argv) {
   } catch (xwim::ArchiveException& ae) {
     logger::error("{}", ae.what());
   }
+}
+
+void compress(const XwimPath& xwim_path) {
+  return;
+}
+
+XwimPath parse_args(int argc, char** argv) {
+  try {
+    return parse(argc, argv);
+  } catch (ArgParseException& ex) {
+    logger::error("{}\n", ex.what());
+    std::cout << usage();
+    std::exit(1);
+  }
+}
+
+int main(int argc, char** argv) {
+  xwim::log::init();
+
+  XwimPath xwim_path = parse_args(argc, argv);
+
+  if(xwim_path.is_archive()) { extract(xwim_path); }
+  else { compress(xwim_path); }
 }

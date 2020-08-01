@@ -13,9 +13,6 @@ namespace argparse {
     if (argc > 2) throw ArgParseException{"Too many arguments provided"};
 
     this->_path = std::filesystem::path{argv[1]};
-
-    // Remove when compression in place
-    if(!is_archive()) throw ArgParseException{"Not a known archive format"};
   }
 
   bool XwimPath::is_archive() {
