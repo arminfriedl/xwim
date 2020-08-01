@@ -1,4 +1,5 @@
 #include <spdlog/common.h>
+#include <cstdlib>
 namespace logger = spdlog;
 
 #include <iostream>
@@ -7,6 +8,7 @@ namespace logger = spdlog;
 #include <list>
 
 #include "util/log.hpp"
+#include "util/argparse.hpp"
 #include "archive.hpp"
 #include "spec.hpp"
 #include "fileformats.hpp"
@@ -14,9 +16,18 @@ namespace logger = spdlog;
 int main(int argc, char** argv) {
   xwim::log::init();
 
+  xwim::argparse::XwimPath xwim_path;
+
   try {
-    std::filesystem::path filepath{argv[1]};
-    xwim::Archive archive{filepath};
+    xwim_path = xwim::argparse::parse(argc, argv);
+  } catch (xwim::argparse::ArgParseException& ex) {
+    logger::error("{}\n", ex.what());
+    std::cout << xwim::argparse::usage();
+    std::exit(1);
+  }
+
+  try {
+    xwim::Archive archive{xwim_path.path()};
     xwim::ArchiveSpec archive_spec = archive.check();
 
     logger::info("{}", archive_spec);
@@ -26,7 +37,7 @@ int main(int argc, char** argv) {
     if (!archive_spec.has_single_root || !archive_spec.is_root_filename) {
       extract_spec.make_dir = true;
 
-      std::filesystem::path stem = xwim::stem(filepath);
+      std::filesystem::path stem = xwim::stem(xwim_path.path());
 
       extract_spec.dirname = stem;
     }

@@ -34,7 +34,7 @@ spdlog::level::level_enum _init_from_env() {
   }
 
   return lvl;
-};
+}
 
 /**
  * Get log level from compile time definition.
