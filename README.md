@@ -54,7 +54,7 @@ archive.tar.gz
 -- file2.txt
 ```
 
-`xwim` will create a folder `archive` in the current directory and extract the
+xwim will create a folder `archive` in the current directory and extract the
 archive contents there.
 
 # Supported formats
@@ -107,6 +107,23 @@ meson compile
 # the current working directory
 src/xwim test/archives/root.tar.gz
 ```
+
+# Configure
+xwim strives to just do the right thing out of the box. Consequently, it does
+not require any configuration. If you are unhappy with the defaults you can
+change them though.
+
+## Changing the log level
+Per default xwim chooses an appropriate log level according to your build type
+(debug/release builds). If you want to change the verbosity you can set the
+`XWIM_LOGLEVEL` environment variable. Valid levels are:
+- trace
+- debug
+- info
+- warning
+- error
+- critical
+- off
 
 # Contributing
 While xwim is still in incubator phase (i.e. before version 1.0) it's main
