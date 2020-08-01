@@ -116,7 +116,7 @@ likely move to GitHub as it's main repository.
 
 If you want to contribute, you can either issue a pull request on it's Github
 mirror (will be cherry picked into the main repository) or send patches to
-`dev [at] friedl [dot] net`.
+dev[at]friedl[dot]net.
 
 If you are interested in a long-term co-maintainership you can also drop me a
 mail for an account on https://git.friedl.net.

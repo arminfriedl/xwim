@@ -1,5 +1,4 @@
 #include <spdlog/common.h>
-#include <spdlog/spdlog.h>
 namespace logger = spdlog;
 
 #include <iostream>
@@ -7,12 +6,13 @@ namespace logger = spdlog;
 #include <string>
 #include <list>
 
+#include "util/log.hpp"
 #include "archive.hpp"
 #include "spec.hpp"
 #include "fileformats.hpp"
 
 int main(int argc, char** argv) {
-  logger::set_level(logger::level::trace);
+  xwim::log::init();
 
   try {
     std::filesystem::path filepath{argv[1]};
