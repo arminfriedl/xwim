@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <memory>
+#include "spec.hpp"
 #include <fmt/format.h>
 
 namespace xwim {
@@ -79,6 +80,23 @@ class ArchiveExtractorSys {
 
   void extract_all(ArchiveReaderSys& reader);
   void extract_entry(ArchiveReaderSys& reader);
+};
+
+/** A compressor for archive files
+ *
+ * Shim for `libarchive`
+ */
+class ArchiveCompressorSys {
+private:
+  archive* new_archive;
+  std::filesystem::path root;
+  xwim::CompressSpec compress_spec;
+
+public:
+  ArchiveCompressorSys(std::filesystem::path& root, xwim::CompressSpec compress_spec);
+  ~ArchiveCompressorSys();
+
+  void compress();
 };
 
 class ArchiveSysException : public std::exception {

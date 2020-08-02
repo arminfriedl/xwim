@@ -118,4 +118,11 @@ void Archive::extract(ExtractSpec extract_spec) {
   extractor->extract_all(reader);
 }
 
+void Archive::compress(CompressSpec compress_spec) {
+  std::filesystem::path abs_path = std::filesystem::absolute(this->path);
+
+  ArchiveCompressorSys compressor{abs_path, compress_spec};
+  compressor.compress();
+}
+
 }  // namespace xwim

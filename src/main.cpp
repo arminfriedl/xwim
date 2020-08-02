@@ -46,7 +46,15 @@ void extract(const XwimPath& xwim_path) {
 }
 
 void compress(const XwimPath& xwim_path) {
-  return;
+  try {
+    xwim::Archive archive{xwim_path.path()};
+    xwim::CompressSpec compress_spec{};
+
+    archive.compress(compress_spec);
+
+  } catch (xwim::ArchiveException& ae) {
+    logger::error("{}", ae.what());
+  }
 }
 
 XwimPath parse_args(int argc, char** argv) {

@@ -1,5 +1,9 @@
+#include <fcntl.h>
 #include <archive_entry.h>
 #include <spdlog/spdlog.h>
+#include "archive.hpp"
+#include "fileformats.hpp"
+#include "spec.hpp"
 namespace logger = spdlog;
 
 #include "archive_sys.hpp"
@@ -117,6 +121,103 @@ xwim::ArchiveExtractorSys::~ArchiveExtractorSys(){
   if(this->writer) {
     archive_write_close(this->writer);
     archive_write_free(this->writer);
+  }
+}
+
+xwim::ArchiveCompressorSys::ArchiveCompressorSys(std::filesystem::path& root, xwim::CompressSpec compress_spec): root{root}, compress_spec{compress_spec} {
+  this->new_archive = archive_write_new();
+
+  for(xwim::archive_filter filter: this->compress_spec.filters) {
+    archive_write_add_filter(this->new_archive, filter);
+  }
+
+  archive_write_set_format(this->new_archive, this->compress_spec.format);
+}
+
+void xwim::ArchiveCompressorSys::compress() {
+  std::filesystem::path archive_path{this->root};
+  if(!std::filesystem::exists(archive_path)) {
+    logger::error("Non-existing path: {}", archive_path.string());
+    throw ArchiveSysException{"Path does not exists"};
+  }
+
+  std::filesystem::file_status file_status = std::filesystem::status(archive_path);
+
+  if(file_status.type() != std::filesystem::file_type::directory
+     && file_status.type() != std::filesystem::file_type::regular) {
+    logger::error("Unknown path type: {}", file_status.type());
+    throw ArchiveSysException{"Unknown path type"};
+  }
+
+  if ((file_status.permissions() & std::filesystem::perms::owner_read) ==
+          std::filesystem::perms::none &&
+      (file_status.permissions() & std::filesystem::perms::group_read) ==
+          std::filesystem::perms::none &&
+      (file_status.permissions() & std::filesystem::perms::others_read) ==
+          std::filesystem::perms::none) {
+    logger::error("Cannot read path with permissions: {}",
+                  file_status.permissions());
+    throw ArchiveSysException{"Unreadable path"};
+  }
+
+  if(file_status.type() == std::filesystem::file_type::regular) {
+    while(archive_path.has_extension()) {
+      archive_path.replace_extension();
+    }
+  }
+
+  archive_path.concat(this->compress_spec.extension);
+  logger::debug("Writing archive at: {}", std::filesystem::absolute(archive_path).c_str());
+  archive_write_open_filename(this->new_archive, std::filesystem::absolute(archive_path).c_str());
+
+  archive* disk = archive_read_disk_new();
+  archive_read_disk_set_standard_lookup(disk);
+
+  int r;
+
+  r = archive_read_disk_open(disk, std::filesystem::relative(this->root).c_str());
+  if(r != ARCHIVE_OK) {
+    throw ArchiveSysException("Could not open path for archiving", disk);
+  }
+
+  archive_entry* entry;
+  char buff[16384];
+
+  for (;;) {
+    entry = archive_entry_new();
+    r = archive_read_next_header2(disk, entry);
+    if (r == ARCHIVE_EOF)
+      break;
+    if (r != ARCHIVE_OK) {
+      throw ArchiveSysException("Could not read next archive entry", disk);
+    }
+
+    archive_read_disk_descend(disk);
+    logger::trace("Processing entry {}", archive_entry_pathname(entry));
+
+    r = archive_write_header(this->new_archive, entry);
+    if (r < ARCHIVE_OK) {
+      throw ArchiveSysException("Could not write header for archive entry",
+                                    this->new_archive);
+    }
+    if (r > ARCHIVE_FAILED) {
+      int fd = open(archive_entry_sourcepath(entry), O_RDONLY);
+      ssize_t len = read(fd, buff, sizeof(buff));
+      while (len > 0) {
+        archive_write_data(this->new_archive, buff, len);
+        len = read(fd, buff, sizeof(buff));
+      }
+      close(fd);
+    }
+    archive_entry_free(entry);
+  }
+}
+
+xwim::ArchiveCompressorSys::~ArchiveCompressorSys() {
+  logger::trace("Destructing ArchiveExtractorSys at {:p}", (void*) this->new_archive);
+  if(this->new_archive) {
+    archive_write_close(this->new_archive);
+    archive_write_free(this->new_archive);
   }
 }
 

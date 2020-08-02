@@ -28,6 +28,9 @@ class Archive {
 
   /** Extract the archive at `path` according to given ExtractSpec */
   void extract(ExtractSpec extract_spec);
+
+  /** Compress the archive at `path` according to given CompressSpec */
+  void compress(CompressSpec compress_spec);
 };
 
 class ArchiveException : public std::exception {
