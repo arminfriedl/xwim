@@ -126,12 +126,12 @@ Per default xwim chooses an appropriate log level according to your build type
 - off
 
 # Contributing
-While xwim is still in incubator phase (i.e. before version 1.0) it's main
+While xwim is still in incubator phase (i.e. before version 1.0) its main
 repository is hosted on https://git.friedl.net/incubator/xwim with a mirror on
 https://github.com/arminfriedl/xwim. With the first stable release it will most
-likely move to GitHub as it's main repository.
+likely move to GitHub as its main repository.
 
-If you want to contribute, you can either issue a pull request on it's Github
+If you want to contribute, you can either issue a pull request on its Github
 mirror (will be cherry picked into the main repository) or send patches to
 dev[at]friedl[dot]net.
 
