@@ -26,6 +26,23 @@ This will extract the archive to the current folder. If the archive contains a
 single root folder it is just extracted as is. Otherwise xwim first creates a
 folder named after the archive and extracts the contents there.
 
+
+```shell
+xwim /home/user/
+```
+
+This will create an archive in the "platform native" format (zip on windows,
+tar.gz on unix) in the current working directory. The archive contains a single
+root folder `user` and is itself named `user.zip` or `user.tar.gz`.
+
+```shell
+xwim /home/user/file.txt
+```
+
+This will create an archive in the "platform native" format (zip on windows,
+tar.gz on unix) in the current working directory. The archive contains a single
+entry `file.txt` and is itself named `file.zip` or `file.tar.gz`.
+
 # Examples
 
 ## Single root folder named after the archive
@@ -137,3 +154,12 @@ dev[at]friedl[dot]net.
 
 If you are interested in a long-term co-maintainership you can also drop me a
 mail for an account on https://git.friedl.net.
+
+# Known Issues
+
+- <strong>Parsing filters is unsupported</strong> 
+  There is a somewhat long standing
+  [bug](https://github.com/libarchive/libarchive/issues/373) in the underlying
+  libarchive library. rar files might fail with `Parsing filters is
+  unsupported`. In case you run into this issue, the only workaround for now is
+  to use another extraction tool.
