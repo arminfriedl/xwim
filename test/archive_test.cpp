@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 
 #include <archive.hpp>
+#include <filesystem>
 #include <spec.hpp>
 
 TEST(ArchiveTest, ArchiveSpecDetectsSingleRoot) {

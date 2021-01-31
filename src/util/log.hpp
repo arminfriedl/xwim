@@ -72,7 +72,7 @@ void init(spdlog::level::level_enum level = spdlog::level::level_enum::off) {
     return;
   }
 
-  return spdlog::set_level(_init_from_compile());
+  spdlog::set_level(_init_from_compile());
 }
 
 }  // namespace log
