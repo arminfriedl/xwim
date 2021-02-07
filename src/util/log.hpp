@@ -10,8 +10,7 @@
 #define XWIM_LOGLEVEL SPDLOG_LEVEL_DEBUG
 #endif
 
-namespace xwim {
-namespace log {
+namespace xwim::log {
 
 /**
  * Get log level from XWIM_LOGLEVEL environment variable.
@@ -75,5 +74,4 @@ void init(spdlog::level::level_enum level = spdlog::level::level_enum::off) {
   spdlog::set_level(_init_from_compile());
 }
 
-}  // namespace log
-}  // namespace xwim
+}  // namespace xwim::log
