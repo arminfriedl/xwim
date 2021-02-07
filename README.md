@@ -5,6 +5,8 @@ Do What I Mean Extractor
 
 ![https://xkcd.com/1168/](https://imgs.xkcd.com/comics/tar.png)
 
+[xkcd-1168](https://xkcd.com/1168/)
+
 Continuing the emacs tradition of "Do What I Mean" tools, xwim is a replacement
 for the excellent, but unfortunately unmaintained,
 [dtrx](https://github.com/brettcs/dtrx). xwim is a command line tool that
