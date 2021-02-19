@@ -1,7 +1,9 @@
 #include "Archiver.hpp"
 
+#include <spdlog/common.h>
 #include <spdlog/spdlog.h>
 
+#include <filesystem>
 #include <map>
 #include <memory>
 
@@ -15,16 +17,19 @@ namespace fs = std::filesystem;
 fs::path archive_extension(const fs::path& path) {
   // TODO: creates lots of paths, refactor
   fs::path ext;
+  fs::path tmp_ext;
   fs::path tmp_path = path;
   while (tmp_path.has_extension()) {
-    fs::path tmp_ext = tmp_path.extension() += ext;
+    tmp_ext = tmp_path.extension() += tmp_ext;
     auto search = extensions_format.find(tmp_ext);
 
-    // (Combined) extension not known, return last known extension
-    if (search == extensions_format.end()) return ext;
+    if (search != extensions_format.end()) {
+      // (Combined) extension known. Remember as `ext` and keep
+      // looking for even longer extensions.
+      ext = tmp_ext;
+    }  // else: (Combined) extension not known, keep `ext` as-is but try longer
+       // extensions
 
-    // Continue extending extension
-    ext = tmp_ext;
     tmp_path = tmp_path.stem();
   }
 
@@ -34,19 +39,27 @@ fs::path archive_extension(const fs::path& path) {
 // Strip longest known extension from path
 fs::path strip_archive_extension(const fs::path& path) {
   // TODO: creates lots of paths, refactor
-  fs::path ext;
+  int longest_ext = 0;
+  fs::path tmp_ext;
   fs::path tmp_path = path;
+  fs::path stem_path = path;
+
   while (tmp_path.has_extension()) {
-    fs::path tmp_ext = tmp_path.extension() += ext;
+    tmp_ext = tmp_path.extension() += tmp_ext;
     auto search = extensions_format.find(tmp_ext);
 
-    // (Combined) extension not known, return stripped path
-    if (search == extensions_format.end()) return tmp_path;
+    if (search != extensions_format.end()) {
+      // (Combined) extension known. Remember as `longest_ext` and keep
+      // looking for even longer extensions.
+      longest_ext++;
+    }  // else: (Combined) extension not known, keep `longest_ext` as-is but try longer
+       // extensions
 
-    // Continue stripping path
-    ext = tmp_ext;
     tmp_path = tmp_path.stem();
   }
+
+  tmp_path = path;
+  for(int i=0; i<longest_ext; i++) tmp_path = tmp_path.stem();
 
   return tmp_path;
 }
@@ -63,7 +76,9 @@ bool can_extract(const fs::path& path) {
 }
 
 Format parse_format(const fs::path& path) {
+  spdlog::debug("Looking for path {}", path);
   fs::path ext = archive_extension(path);
+  spdlog::debug("Looking for ext {}", ext);
   auto search = extensions_format.find(ext);
   if (search == extensions_format.end()) {
     throw XwimError{"No known archiver for {}", path};

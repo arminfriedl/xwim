@@ -1,7 +1,9 @@
 #include <archive.h>
 #include <archive_entry.h>
+#include <fcntl.h>
 #include <fmt/core.h>
 #include <spdlog/spdlog.h>
+#include <sys/stat.h>
 
 #include <filesystem>
 #include <iostream>
@@ -16,7 +18,38 @@ namespace fs = std::filesystem;
 
 static int copy_data(shared_ptr<archive> reader, shared_ptr<archive> writer);
 
-void LibArchiver::compress(set<fs::path> ins, fs::path archive_out) { return; }
+void LibArchiver::compress(set<fs::path> ins, fs::path archive_out) {
+  spdlog::debug("Compressing to {}", archive_out);
+
+  // cannot use unique_ptr here since unique_ptr requires a
+  // complete type. `archive` is forward declared only.
+  shared_ptr<archive> writer;
+  writer = shared_ptr<archive>(archive_write_new(), archive_write_free);
+  archive_write_add_filter_gzip(writer.get());
+  archive_write_set_format_pax_restricted(writer.get());
+  archive_write_open_filename(writer.get(), archive_out.c_str());
+
+  archive_entry *entry = archive_entry_new();
+  char buff[8192];
+
+  for(auto path: ins) {
+    archive_entry_set_pathname(entry, path.c_str());
+    archive_entry_set_size(entry, fs::file_size(path));
+    archive_entry_set_filetype(entry, AE_IFREG);
+    archive_entry_set_perm(entry, 0644);
+    archive_write_header(writer.get(), entry);
+
+    int fd = open(path.c_str(), O_RDONLY);
+    int len = read(fd, buff, sizeof(buff));
+    while (len > 0) {
+      archive_write_data(writer.get(), buff, len);
+      len = read(fd, buff, sizeof(buff));
+    }
+
+    close(fd);
+    archive_entry_clear(entry);
+  }
+}
 
 void LibArchiver::extract(fs::path archive_in, fs::path out) {
   spdlog::debug("Extracting archive {} to {}", archive_in, out);
