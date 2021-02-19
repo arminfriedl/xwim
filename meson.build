@@ -8,4 +8,4 @@ add_global_arguments('-DVERSION='+meson.version(), language: 'cpp')
 
 subdir('src')
 subdir('doc')
-subdir('test')
+# subdir('test')
