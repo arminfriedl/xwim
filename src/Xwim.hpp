@@ -28,6 +28,7 @@ class Xwim {
   void infer_output();
   void infer_compression_output();
   void infer_extraction_output();
+  void sanitize_output();
 
  public:
   Xwim();

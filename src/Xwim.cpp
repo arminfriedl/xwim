@@ -2,10 +2,12 @@
 
 #include <spdlog/spdlog.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <filesystem>
 #include <ios>
 #include <iostream>
+#include <iterator>
 #include <random>
 #include <string>
 
@@ -45,9 +47,39 @@ void Xwim::dwim() {
       break;
     case Action::EXTRACT:
       this->archiver->extract(*ins.begin(), out);
+      sanitize_output();
       break;
     default:
       spdlog::error("Unknown action");
+  }
+}
+
+void Xwim::sanitize_output() {
+  fs::path in_stripped = xwim::strip_archive_extension(*ins.begin());
+
+  int count = 0;
+  fs::directory_entry first_entry;
+  for(auto& e: fs::directory_iterator(out)) {
+    count++;
+    if(first_entry.path().empty()) {
+      first_entry = e;
+    }
+  }
+
+  if (count >= 2) {
+    spdlog::debug("Found multiple entries in extraction directory. Moving {} to {}", out, in_stripped);
+    fs::rename(out, in_stripped);
+  } else {
+    if(first_entry.is_directory()) {
+      spdlog::debug("Found single directory in extraction directory. Moving {} to {}",
+          first_entry.path(), in_stripped);
+      fs::rename(first_entry, in_stripped);
+      fs::remove(out);
+    } else {
+      spdlog::debug(
+          "Found single file in extraction directory. Moving {} to {}", out, in_stripped);
+      fs::rename(out, in_stripped);
+    }
   }
 }
 
@@ -131,4 +163,4 @@ void Xwim::setIns(vector<fs::path> ins) {
                  (ins.size() - this->ins.size()));
   }
 }
-}
+}  // namespace xwim
