@@ -116,9 +116,8 @@ void Xwim::infer_compression_output() {
     // archive name is just the name of the input with default archive
     // extension
     fs::path archive_stem = xwim::strip_archive_extension(*ins.begin());
-    fs::path path = (*ins.begin()).stem();
-    path += default_extension;
-    out = path;
+    archive_stem += default_extension;
+    out = archive_stem;
   } else {
     // We cannot guess the name of the output archive
 

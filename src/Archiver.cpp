@@ -18,7 +18,16 @@ fs::path archive_extension(const fs::path& path) {
   // TODO: creates lots of paths, refactor
   fs::path ext;
   fs::path tmp_ext;
-  fs::path tmp_path = path;
+  fs::path tmp_path;
+
+  // cater for trailing `/` which is represented
+  // as empty path element
+  for (auto p : path) {
+    if (!p.empty()) {
+      tmp_path /= p;
+    }
+  }
+
   while (tmp_path.has_extension()) {
     tmp_ext = tmp_path.extension() += tmp_ext;
     auto search = extensions_format.find(tmp_ext);
@@ -27,8 +36,8 @@ fs::path archive_extension(const fs::path& path) {
       // (Combined) extension known. Remember as `ext` and keep
       // looking for even longer extensions.
       ext = tmp_ext;
-    }  // else: (Combined) extension not known, keep `ext` as-is but try longer
-       // extensions
+    }  // else: (Combined) extension not known, keep `ext` as-is but try
+       // longer extensions
 
     tmp_path = tmp_path.stem();
   }
@@ -42,10 +51,19 @@ fs::path strip_archive_extension(const fs::path& path) {
   int longest_ext = 0;
   int tmp_longest_ext = 0;
   fs::path tmp_ext;
-  fs::path tmp_path = path;
-  fs::path stem_path = path;
+  fs::path tmp_path;
+  fs::path stem_path;
 
-  spdlog::debug("Checking {} extensions", path);
+  // cater for trailing `/` which is represented
+  // as empty path element
+  for(auto p: path) {
+    if(!p.empty()) {
+      tmp_path /= p;
+    }
+  }
+  stem_path = tmp_path;
+
+  spdlog::debug("Checking {} extensions", tmp_path);
 
   while (tmp_path.has_extension()) {
     tmp_ext = tmp_path.extension() += tmp_ext;
@@ -57,17 +75,18 @@ fs::path strip_archive_extension(const fs::path& path) {
       // (Combined) extension known. Remember as `longest_ext` and keep
       // looking for even longer extensions.
       longest_ext = tmp_longest_ext;
-    }  // else: (Combined) extension not known, keep `longest_ext` as-is but try longer
-       // extensions
+    }  // else: (Combined) extension not known, keep `longest_ext` as-is but try
+       // longer extensions
 
     spdlog::debug("Stemming {} to {}", tmp_path, tmp_path.stem());
     tmp_path = tmp_path.stem();
   }
 
   spdlog::debug("Found {} extensions", longest_ext);
-  tmp_path = path;
-  for(int i=0; i<longest_ext; i++) tmp_path = tmp_path.stem();
+  tmp_path = stem_path;
+  for (int i = 0; i < longest_ext; i++) tmp_path = tmp_path.stem();
 
+  spdlog::debug("Stripped path is {} ", tmp_path);
   return tmp_path;
 }
 
