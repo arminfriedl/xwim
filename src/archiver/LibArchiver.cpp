@@ -32,13 +32,13 @@ void LibArchiver::compress(set<fs::path> ins, fs::path archive_out) {
   archive_write_open_filename(writer.get(), archive_out.c_str());
 
   shared_ptr<archive> reader;
-  reader = shared_ptr<archive>(archive_read_disk_new(), archive_read_free);
-  archive_read_disk_set_standard_lookup(reader.get());
 
   shared_ptr<archive_entry> entry = shared_ptr<archive_entry>(archive_entry_new(), archive_entry_free);
 
   for (auto in : ins) {
     spdlog::debug("Compressing {}", in);
+    reader = shared_ptr<archive>(archive_read_disk_new(), archive_read_free);
+    archive_read_disk_set_standard_lookup(reader.get());
 
     r = archive_read_disk_open(reader.get(), in.c_str());
     if (r != ARCHIVE_OK) {
@@ -56,7 +56,7 @@ void LibArchiver::compress(set<fs::path> ins, fs::path archive_out) {
                         archive_error_string(reader.get())};
       }
 
-      spdlog::debug("Compressing entry {}", archive_entry_pathname(entry.get()));
+      spdlog::debug("Adding {} to archive", archive_entry_pathname(entry.get()));
       r = archive_write_header(writer.get(), entry.get());
       if (r != ARCHIVE_OK) {
         throw XwimError{"Failed writing archive entry. {}",
