@@ -20,6 +20,8 @@ static int copy_data(shared_ptr<archive> reader, shared_ptr<archive> writer);
 
 void LibArchiver::compress(set<fs::path> ins, fs::path archive_out) {
   spdlog::debug("Compressing to {}", archive_out);
+  int r;  // libarchive error handling
+  static char buff[16384]; // read buffer
 
   // cannot use unique_ptr here since unique_ptr requires a
   // complete type. `archive` is forward declared only.
@@ -29,31 +31,57 @@ void LibArchiver::compress(set<fs::path> ins, fs::path archive_out) {
   archive_write_set_format_pax_restricted(writer.get());
   archive_write_open_filename(writer.get(), archive_out.c_str());
 
-  archive_entry *entry = archive_entry_new();
-  char buff[8192];
+  shared_ptr<archive> reader;
+  reader = shared_ptr<archive>(archive_read_disk_new(), archive_read_free);
+  archive_read_disk_set_standard_lookup(reader.get());
 
-  for(auto path: ins) {
-    archive_entry_set_pathname(entry, path.c_str());
-    archive_entry_set_size(entry, fs::file_size(path));
-    archive_entry_set_filetype(entry, AE_IFREG);
-    archive_entry_set_perm(entry, 0644);
-    archive_write_header(writer.get(), entry);
+  shared_ptr<archive_entry> entry = shared_ptr<archive_entry>(archive_entry_new(), archive_entry_free);
 
-    int fd = open(path.c_str(), O_RDONLY);
-    int len = read(fd, buff, sizeof(buff));
-    while (len > 0) {
-      archive_write_data(writer.get(), buff, len);
-      len = read(fd, buff, sizeof(buff));
+  for (auto in : ins) {
+    spdlog::debug("Compressing {}", in);
+
+    r = archive_read_disk_open(reader.get(), in.c_str());
+    if (r != ARCHIVE_OK) {
+      throw XwimError{"Failed opening {}. {}", in,
+                      archive_error_string(reader.get())};
     }
 
-    close(fd);
-    archive_entry_clear(entry);
+    for (;;) {
+      r = archive_read_next_header2(reader.get(), entry.get());
+
+      if (r == ARCHIVE_EOF) break;
+
+      if (r != ARCHIVE_OK) {
+        throw XwimError{"Failed compressing archive entry. {}",
+                        archive_error_string(reader.get())};
+      }
+
+      spdlog::debug("Compressing entry {}", archive_entry_pathname(entry.get()));
+      r = archive_write_header(writer.get(), entry.get());
+      if (r != ARCHIVE_OK) {
+        throw XwimError{"Failed writing archive entry. {}",
+                        archive_error_string(writer.get())};
+      }
+
+      /* For now, we use a simpler loop to copy data
+       * into the target archive. */
+      int fd = open(archive_entry_sourcepath(entry.get()), O_RDONLY);
+      ssize_t len = read(fd, buff, sizeof(buff));
+      while (len > 0) {
+        archive_write_data(writer.get(), buff, len);
+        len = read(fd, buff, sizeof(buff));
+      }
+      close(fd);
+
+      archive_entry_clear(entry.get());
+      archive_read_disk_descend(reader.get());
+    }
   }
 }
 
 void LibArchiver::extract(fs::path archive_in, fs::path out) {
   spdlog::debug("Extracting archive {} to {}", archive_in, out);
-  int r; // libarchive error handling
+  int r;  // libarchive error handling
 
   // cannot use unique_ptr here since unique_ptr requires a
   // complete type. `archive` is forward declared only.
@@ -75,18 +103,20 @@ void LibArchiver::extract(fs::path archive_in, fs::path out) {
   fs::path cur_path = fs::current_path();
   fs::current_path(out);
 
-  archive_entry* entry;
+  archive_entry *entry;
   for (;;) {
     r = archive_read_next_header(reader.get(), &entry);
     if (r == ARCHIVE_EOF) break;
 
     if (r != ARCHIVE_OK) {
-      throw XwimError{"Failed extracting archive entry. {}", archive_error_string(reader.get())};
+      throw XwimError{"Failed extracting archive entry. {}",
+                      archive_error_string(reader.get())};
     }
 
     r = archive_write_header(writer.get(), entry);
     if (r != ARCHIVE_OK) {
-      throw XwimError{"Failed writing archive entry header. {}", archive_error_string(writer.get())};
+      throw XwimError{"Failed writing archive entry header. {}",
+                      archive_error_string(writer.get())};
     }
 
     if (archive_entry_size(entry) > 0) {
