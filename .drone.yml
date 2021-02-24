@@ -31,6 +31,7 @@ steps:
   commands:
     - meson --buildtype=release target/shared
     - ninja -C target/shared
+    - strip target/static/src/xwim
     - mkdir xwim-${DRONE_TAG}-x86_64-glibc-linux-shared
     - mv target/shared/src/xwim xwim-${DRONE_TAG}-x86_64-glibc-linux-shared
 
@@ -39,6 +40,7 @@ steps:
   commands:
     - meson --buildtype=release --default-library=static target/static
     - ninja -C target/static
+    - strip target/static/src/xwim
     - mkdir xwim-${DRONE_TAG}-x86_64-musl-linux-static
     - mv target/static/src/xwim xwim-${DRONE_TAG}-x86_64-musl-linux-static
 
