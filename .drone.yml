@@ -3,29 +3,17 @@ type: docker
 name: default
 
 steps:
-- name: build
+- name: build-shared
   image: arminfriedl/xwim-build:shared
   commands:
-    # - meson wrap install gtest
-    - meson target/shared #-Db_coverage=true
+    - meson target/shared
     - ninja -C target/shared
-    # - ninja -C build test && ninja -C build coverage
-    # - echo "******** TEST LOGS ***********"
-    # - cat build/meson-logs/testlog.txt
-    # - echo "****** COVERAGE LOGS *********"
-    # - cat build/meson-logs/coverage.txt
 
 - name: build-static
   image: arminfriedl/xwim-build:static
   commands:
-    # - meson wrap install gtest
-    - meson --default-library static target/static #-Db_coverage=true
+    - meson --default-library=static target/static
     - ninja -C target/static
-    # - ninja -C build test && ninja -C build coverage
-    # - echo "******** TEST LOGS ***********"
-    # - cat build/meson-logs/testlog.txt
-    # - echo "****** COVERAGE LOGS *********"
-    # - cat build/meson-logs/coverage.txt
 
 trigger:
   event:
@@ -38,20 +26,30 @@ type: docker
 name: release
 
 steps:
-- name: build
-  image: arminfriedl/xwim-build
+- name: build-shared
+  image: arminfriedl/xwim-build:shared
   commands:
-    - meson wrap install gtest
-    - meson --buildtype=release build
-    - ninja -C build
-    - mkdir xwim-${DRONE_TAG}-x86_64-glibc-linux
-    - mv build/src/xwim xwim-${DRONE_TAG}-x86_64-glibc-linux
+    - meson --buildtype=release target/shared
+    - ninja -C target/shared
+    - mkdir xwim-${DRONE_TAG}-x86_64-glibc-linux-shared
+    - mv target/shared/src/xwim xwim-${DRONE_TAG}-x86_64-glibc-linux-shared
+
+- name: build-static
+  image: arminfriedl/xwim-build:static
+  commands:
+    - meson --buildtype=release --default-library=static target/static
+    - ninja -C target/static
+    - mkdir xwim-${DRONE_TAG}-x86_64-musl-linux-static
+    - mv target/static/src/xwim xwim-${DRONE_TAG}-x86_64-musl-linux-static
 
 - name: package
   image: arminfriedl/xwim-build
   commands:
-    - tar czf xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.gz xwim-${DRONE_TAG}-x86_64-glibc-linux/xwim
-    - zip -r xwim-${DRONE_TAG}-x86_64-glibc-linux.zip xwim-${DRONE_TAG}-x86_64-glibc-linux
+    - tar czf xwim-${DRONE_TAG}-x86_64-glibc-linux-shared.tar.gz xwim-${DRONE_TAG}-x86_64-glibc-linux-shared/xwim
+    - tar czf xwim-${DRONE_TAG}-x86_64-musl-linux-static.tar.gz xwim-${DRONE_TAG}-x86_64-musl-linux-static/xwim
+  depends_on:
+    - build-shared
+    - build-static
 
 - name: publish
   image: plugins/gitea-release
@@ -60,13 +58,14 @@ steps:
     api_key:
       from_secret: gitea_token
     files:
-      - xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.bz2
-      - xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.gz
-      - xwim-${DRONE_TAG}-x86_64-glibc-linux.zip
+      - xwim-${DRONE_TAG}-x86_64-glibc-linux-shared.tar.gz
+      - xwim-${DRONE_TAG}-x86_64-musl-linux-static.tar.gz
     title: xwim ${DRONE_TAG}
     checksum:
       - md5
       - sha256
+  depends_on:
+    - package
 
 trigger:
   event:
