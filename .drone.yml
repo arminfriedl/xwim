@@ -4,16 +4,28 @@ name: default
 
 steps:
 - name: build
-  image: arminfriedl/xwim-build
+  image: arminfriedl/xwim-build:shared
   commands:
-    - meson wrap install gtest
-    - meson build -Db_coverage=true
-    - ninja -C build
-    - ninja -C build test && ninja -C build coverage
-    - echo "******** TEST LOGS ***********"
-    - cat build/meson-logs/testlog.txt
-    - echo "****** COVERAGE LOGS *********"
-    - cat build/meson-logs/coverage.txt
+    # - meson wrap install gtest
+    - meson target/shared #-Db_coverage=true
+    - ninja -C target/shared
+    # - ninja -C build test && ninja -C build coverage
+    # - echo "******** TEST LOGS ***********"
+    # - cat build/meson-logs/testlog.txt
+    # - echo "****** COVERAGE LOGS *********"
+    # - cat build/meson-logs/coverage.txt
+
+- name: build-static
+  image: arminfriedl/xwim-build:static
+  commands:
+    # - meson wrap install gtest
+    - meson --default-library static target/static #-Db_coverage=true
+    - ninja -C target/static
+    # - ninja -C build test && ninja -C build coverage
+    # - echo "******** TEST LOGS ***********"
+    # - cat build/meson-logs/testlog.txt
+    # - echo "****** COVERAGE LOGS *********"
+    # - cat build/meson-logs/coverage.txt
 
 trigger:
   event:
@@ -38,7 +50,6 @@ steps:
 - name: package
   image: arminfriedl/xwim-build
   commands:
-    - tar cjf xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.bz2 xwim-${DRONE_TAG}-x86_64-glibc-linux/xwim
     - tar czf xwim-${DRONE_TAG}-x86_64-glibc-linux.tar.gz xwim-${DRONE_TAG}-x86_64-glibc-linux/xwim
     - zip -r xwim-${DRONE_TAG}-x86_64-glibc-linux.zip xwim-${DRONE_TAG}-x86_64-glibc-linux
 
