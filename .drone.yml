@@ -8,12 +8,31 @@ steps:
   commands:
     - meson target/shared
     - ninja -C target/shared
+    - mv target/shared/src/xwim xwim-x86_64-glibc-linux-shared
 
 - name: build-static
   image: arminfriedl/xwim-build:static
   commands:
     - meson --default-library=static target/static
     - ninja -C target/static
+    - mv target/static/src/xwim xwim-x86_64-musl-linux-static
+
+- name: publish-binaries
+  image: appleboy/drone-scp
+  settings:
+    host: friedl.net
+    username:
+      from_secret: deploy_user
+    password:
+      from_secret: deploy_password
+    port: 22
+    target: /var/services/dirlist/repo/cicd/xwim/${DRONE_COMMIT_SHA:0:8}/
+    source:
+      - xwim-x86_64-glibc-linux-shared
+      - xwim-x86_64-musl-linux-static
+  depends_on:
+    - build-shared
+    - build-static
 
 trigger:
   event:
