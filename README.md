@@ -22,6 +22,22 @@ archiving binaries (if installed). In contrast `xwim` is a compiled binary based
 directly on archiving libraries, which some may appreciate. It can optionally be
 statically linked if you want it entirely self-contained.
 
+# Install
+`xwim` currently released for Linux only. There are two flavers: statically
+linked and dynamically linked. The releases can be downloaded from
+https://git.friedl.net/incubator/xwim/releases and should run on most 64-bit
+GNU/Linux distributions. 
+
+For the dynamically linked version, the following dependencies have to be
+installed:
+- [spdlog](https://github.com/gabime/spdlog)
+- [fmt](https://github.com/fmtlib/fmt)
+- [libarchive](https://github.com/libarchive/libarchive)
+
+Windows support is planned for the first stable release. Packaging for various
+distributions is also planned once `xwim` stabilizes. Please reach out if you
+can help.
+
 # Usage
 Invoking `xwim` is as simple as:
 
@@ -89,22 +105,6 @@ announced.
 Take a look `Archiver.hpp` if you want to help and have some time for testing.
 Most formats can readily be added if they are supported by libarchive. For other
 formats you have to add an `Archiver` implementation.
-
-# Install
-`xwim` currently released for Linux only. There are two flavers: statically
-linked and dynamically linked. The releases can be downloaded from
-https://git.friedl.net/incubator/xwim/releases and should run on most 64-bit
-GNU/Linux distributions. 
-
-For the dynamically linked version, the following dependencies have to be
-installed:
-- [spdlog](https://github.com/gabime/spdlog)
-- [fmt](https://github.com/fmtlib/fmt)
-- [libarchive](https://github.com/libarchive/libarchive)
-
-Windows support is planned for the first stable release. Packaging for various
-distributions is also planned once `xwim` stabilizes. Please reach out if you
-can help.
 
 # Build
 xwim is built with [meson](https://mesonbuild.com/). To compile xwim from source
