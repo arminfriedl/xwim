@@ -7,7 +7,7 @@ Do What I Mean Extractor
 
 [xkcd-1168](https://xkcd.com/1168/)
 
-Continuing the emacs tradition of "Do What I Mean" tools, xwim is a replacement
+Continuing the emacs tradition of "Do What I Mean" tools, xwim is replacement
 for the excellent, but unfortunately unmaintained,
 [dtrx](https://github.com/brettcs/dtrx). xwim is a command line tool that
 targets two problems with archives:
@@ -17,6 +17,11 @@ considerably between formats
 - Inconsiderately packaged archives tend to spill their content over the
 directory they are extracted to
 
+`dtrx` is a Python script that sets up the command line and calls appropriate
+archiving binaries (if installed). In contrast `xwim` is a compiled binary based
+directly on archiving libraries, which some may appreciate. It can optionally be
+statically linked if you want it entirely self-contained.
+
 # Usage
 Invoking `xwim` is as simple as:
 
@@ -25,8 +30,8 @@ xwim archive.tar.gz
 ```
 
 This will extract the archive to the current folder. If the archive contains a
-single root folder it is just extracted as is. Otherwise xwim first creates a
-folder named after the archive and extracts the contents there.
+single root folder it is just extracted as is. Otherwise xwim creates a folder
+named after the archive and extracts the contents there.
 
 
 ```shell
@@ -77,26 +82,29 @@ xwim will create a folder `archive` in the current directory and extract the
 archive contents there.
 
 # Supported formats
-xwim supports most formats supported by [libarchive](https://libarchive.org/):
+Currently `xwim` supports `tar.gz` and `zip` archives. However, this will
+rapidly expand to many more formats until a stable release is officially
+announced.
 
-- 7-zip: 7z, 7zip
-- zip: jar, zip 
-- bzip2: bz2, bzip2
-- gzip: gz, gzip
-- xzip: xz
-- rar: rar
-- tar with compression: tgz, tar.gz, tar.bz2, tar.xz
+Take a look `Archiver.hpp` if you want to help and have some time for testing.
+Most formats can readily be added if they are supported by libarchive. For other
+formats you have to add an `Archiver` implementation.
 
 # Install
-xwim is currently released as a dynamically linked glibc binary only. The
-releases can be downloaded from https://git.friedl.net/incubator/xwim/releases
-and should run on most glibc based GNU/Linux distributions. The following
-dependencies have to be installed:
+`xwim` currently released for Linux only. There are two flavers: statically
+linked and dynamically linked. The releases can be downloaded from
+https://git.friedl.net/incubator/xwim/releases and should run on most 64-bit
+GNU/Linux distributions. 
+
+For the dynamically linked version, the following dependencies have to be
+installed:
 - [spdlog](https://github.com/gabime/spdlog)
 - [fmt](https://github.com/fmtlib/fmt)
 - [libarchive](https://github.com/libarchive/libarchive)
 
-Approaching the first stable release we will release for more platforms.
+Windows support is planned for the first stable release. Packaging for various
+distributions is also planned once `xwim` stabilizes. Please reach out if you
+can help.
 
 # Build
 xwim is built with [meson](https://mesonbuild.com/). To compile xwim from source
@@ -161,7 +169,12 @@ mail for an account on https://git.friedl.net.
 
 - <strong>Parsing filters is unsupported</strong> 
   There is a somewhat long standing
-  [bug](https://github.com/libarchive/libarchive/issues/373) in the underlying
-  libarchive library. rar files might fail with `Parsing filters is
-  unsupported`. In case you run into this issue, the only workaround for now is
-  to use another extraction tool.
+  [bug](https://github.com/libarchive/libarchive/issues/373) in libarchive. rar
+  files might fail with `Parsing filters is unsupported`. This is because `rar`
+  is a proprietary format and `libarchive` does not implement the full machinery
+  necessary to support `rar` completely. `xwim` is all about convenience. If you
+  want to help with supporting `rar`, please keep in mind that this means we
+  have we want to take the [official `unrar`
+  library](https://www.rarlab.com/rar_add.htm) if possible. This is also a
+  licensing issue as `unrar` is proprietary and its license seemingly not GPL
+  compatible.

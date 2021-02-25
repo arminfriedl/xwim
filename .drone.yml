@@ -50,7 +50,7 @@ steps:
   commands:
     - meson --buildtype=release target/shared
     - ninja -C target/shared
-    - strip target/static/src/xwim
+    - strip target/shared/src/xwim
     - mkdir xwim-${DRONE_TAG}-x86_64-glibc-linux-shared
     - mv target/shared/src/xwim xwim-${DRONE_TAG}-x86_64-glibc-linux-shared
 
