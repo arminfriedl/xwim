@@ -14,10 +14,6 @@
 #include "Archiver.hpp"
 #include "Common.hpp"
 
-namespace xwim {
-using namespace std;
-namespace fs = std::filesystem;
-
 #if defined(unix) || defined(__unix__) || defined(__unix)
 std::string default_extension = ".tar.gz";
 #elif defined(_win32) || defined(__win32__) || defined(__windows__)
@@ -25,6 +21,10 @@ std::string default_extension = ".zip";
 #else
 std::string default_extension = ".zip";
 #endif
+
+namespace xwim {
+using namespace std;
+namespace fs = std::filesystem;
 
 Xwim::Xwim() : action{Action::UNKNOWN} {}
 
