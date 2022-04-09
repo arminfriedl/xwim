@@ -7,7 +7,7 @@
 #include <memory>
 #include <set>
 
-#include "Common.hpp"
+#include "util/Common.hpp"
 
 namespace xwim {
 

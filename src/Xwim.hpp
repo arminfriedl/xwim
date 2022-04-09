@@ -5,17 +5,61 @@
 
 #include <exception>
 #include <memory>
+#include <optional>
 #include <set>
 #include <stdexcept>
 
-#include "Common.hpp"
 #include "Archiver.hpp"
+#include "util/Common.hpp"
+#include "UserOpt.hpp"
 
 namespace xwim {
 using namespace std;
 namespace fs = std::filesystem;
 
-enum class Action { UNKNOWN, EXTRACT, COMPRESS };
+  enum class Action { EXTRACT, COMPRESS };
+
+  struct XwimIntent {
+    
+  };
+
+
+class XwimBuilder {
+ private:
+  UserOpt user_opt;
+
+ public:
+  XwimBuilder(UserOpt user_opt) : user_opt(user_opt){};
+  Xwim build();
+};
+
+class Xwim {
+ public:
+  virtual XwimResult dwim() = 0;
+};
+
+class XwimCompressor : public Xwim {
+private:
+  fs::path archive;
+  std::set<fs::path> paths;
+};
+
+class XwimExtractor : public Xwim {};
+
+class XwimConfig {
+ public:
+  Action get_action();
+}
+
+class Xwim {
+ private:
+  XwimEngine xwim_engine;
+  UserOpt user_opt;
+
+ public:
+  Xwim(UserOpt user_opt);
+  void dwim();
+}
 
 class Xwim {
  private:

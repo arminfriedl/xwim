@@ -12,7 +12,7 @@
 #include <string>
 
 #include "Archiver.hpp"
-#include "Common.hpp"
+#include "util/Common.hpp"
 
 namespace xwim {
 using namespace std;

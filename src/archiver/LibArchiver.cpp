@@ -9,8 +9,8 @@
 #include <iostream>
 #include <memory>
 
-#include "Archiver.hpp"
-#include "Common.hpp"
+#include "../Archiver.hpp"
+#include "../util/Common.hpp"
 
 namespace xwim {
 using namespace std;

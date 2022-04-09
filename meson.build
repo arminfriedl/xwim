@@ -5,7 +5,9 @@ project('xwim', 'cpp',
                           'b_ndebug=if-release'])
 
 add_global_arguments('-DVERSION='+meson.version(), language: 'cpp')
+add_global_arguments('-DSPDLOG_FMT_EXTERNAL', language: 'cpp')
+add_global_arguments('-DFMT_HEADER_ONLY', language: 'cpp')
 
 subdir('src')
 subdir('doc')
-# subdir('test')
+subdir('test')

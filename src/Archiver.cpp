@@ -7,7 +7,7 @@
 #include <map>
 #include <memory>
 
-#include "Common.hpp"
+#include "util/Common.hpp"
 
 namespace xwim {
 using namespace std;
