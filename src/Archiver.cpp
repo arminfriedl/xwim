@@ -1,6 +1,5 @@
 #include "Archiver.hpp"
 
-#include <spdlog/common.h>
 #include <spdlog/spdlog.h>
 
 #include <filesystem>
@@ -8,6 +7,14 @@
 #include <memory>
 
 #include "util/Common.hpp"
+
+#if defined(unix) || defined(__unix__) || defined(__unix)
+std::string default_extension = ".tar.gz";
+#elif defined(_win32) || defined(__win32__) || defined(__windows__)
+std::string default_extension = ".zip";
+#else
+    std::string default_extension = ".zip";
+#endif
 
 namespace xwim {
 using namespace std;
@@ -90,7 +97,14 @@ fs::path strip_archive_extension(const fs::path& path) {
   return tmp_path;
 }
 
-bool can_extract(const fs::path& path) {
+std::filesystem::path default_archive(const std::filesystem::path& base) {
+    string base_s = base.string();
+    string ext_s = default_extension;
+
+    return fs::path{fmt::format("{}{}", base_s, ext_s)};
+}
+
+bool can_handle_archive(const fs::path& path) {
   fs::path ext = archive_extension(path);
   if (format_extensions.find(ext.string()) != format_extensions.end()) {
     spdlog::debug("Found {} in known formats", ext);
@@ -125,4 +139,5 @@ unique_ptr<Archiver> make_archiver(const string& archive_name) {
           archive_name};
   };
 }
+
 }  // namespace xwim

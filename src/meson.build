@@ -1,4 +1,5 @@
-xwim_src = ['main.cpp', 'Xwim.cpp', 'Archiver.cpp', 'UserOpt.cpp']
+xwim_src = ['main.cpp', 'Archiver.cpp', 'UserOpt.cpp', 'UserIntent.cpp']
+
 xwim_archiver = ['archiver/LibArchiver.cpp']
 
 is_static = get_option('default_library')=='static'

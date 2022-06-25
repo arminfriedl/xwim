@@ -6,7 +6,7 @@ steps:
 - name: build-shared
   image: arminfriedl/xwim-build:shared
   commands:
-    - meson wrap install gtest
+    - meson wrap install gtest || true
     - meson target/shared
     - ninja -C target/shared
     - mv target/shared/src/xwim xwim-x86_64-glibc-linux-shared
@@ -14,7 +14,7 @@ steps:
 - name: build-static
   image: arminfriedl/xwim-build:static
   commands:
-    - meson wrap install gtest
+    - meson wrap install gtest || true
     - meson --default-library=static target/static
     - ninja -C target/static
     - mv target/static/src/xwim xwim-x86_64-musl-linux-static
@@ -50,6 +50,7 @@ steps:
 - name: build-shared
   image: arminfriedl/xwim-build:shared
   commands:
+    - meson wrap install gtest || true
     - meson --buildtype=release target/shared
     - ninja -C target/shared
     - strip target/shared/src/xwim
@@ -59,6 +60,7 @@ steps:
 - name: build-static
   image: arminfriedl/xwim-build:static
   commands:
+    - meson wrap install gtest || true
     - meson --buildtype=release --default-library=static target/static
     - ninja -C target/static
     - strip target/static/src/xwim

@@ -10,13 +10,21 @@ using namespace std;
 namespace fs = std::filesystem;
 
 struct UserOpt {
-  bool compress;
-  bool extract;
+  optional<bool> compress;
+  optional<bool> extract;
   bool interactive;
   std::optional<fs::path> out;
   std::set<fs::path> paths;
 
   UserOpt(int argc, char** argv);
+
+  bool wants_compress() const {
+      return this->compress.has_value() && this->compress.value();
+  }
+
+  bool wants_extract() const {
+      return this->extract.has_value() && this->extract.value();
+  }
 };
 
 }  // namespace xwim

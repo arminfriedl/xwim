@@ -40,8 +40,10 @@ class LibArchiver : public Archiver {
 
 std::filesystem::path archive_extension(const std::filesystem::path& path);
 std::filesystem::path strip_archive_extension(const std::filesystem::path& path);
+std::filesystem::path default_archive(const std::filesystem::path& base);
+
 Format parse_format(const std::filesystem::path& path);
-bool can_extract(const std::filesystem::path& path);
+bool can_handle_archive(const std::filesystem::path& path);
 
 std::unique_ptr<Archiver> make_archiver(const std::string& archive_name);
 

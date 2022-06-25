@@ -27,8 +27,9 @@ void LibArchiver::compress(set<fs::path> ins, fs::path archive_out) {
   // complete type. `archive` is forward declared only.
   shared_ptr<archive> writer;
   writer = shared_ptr<archive>(archive_write_new(), archive_write_free);
-  archive_write_add_filter_gzip(writer.get());
-  archive_write_set_format_pax_restricted(writer.get());
+//  archive_write_add_filter_gzip(writer.get());
+//  archive_write_set_format_pax_restricted(writer.get());
+  archive_write_set_format_filter_by_ext(writer.get(), archive_out.c_str());
   archive_write_open_filename(writer.get(), archive_out.c_str());
 
   shared_ptr<archive> reader;

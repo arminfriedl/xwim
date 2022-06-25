@@ -17,12 +17,11 @@ namespace xwim {
 using namespace std;
 namespace fs = std::filesystem;
 
-  enum class Action { EXTRACT, COMPRESS };
+enum class Action { EXTRACT, COMPRESS };
 
-  struct XwimIntent {
+struct XwimIntent {
     
-  };
-
+};
 
 class XwimBuilder {
  private:
