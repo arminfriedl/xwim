@@ -8,16 +8,9 @@
 #include <set>
 
 #include "util/Common.hpp"
+#include "Formats.hpp"
 
 namespace xwim {
-
-// Invariant:
-// `extensions_format` defines a surjection from `format_extensions`
-// to `Formats`
-const std::set<std::string> format_extensions{".tar.gz", ".zip"};
-enum class Format { TAR_GZ, ZIP };
-const std::map<std::string, Format> extensions_format{
-    {".tar.gz", Format::TAR_GZ}, {".zip", Format::ZIP}};
 
 class Archiver {
  public:

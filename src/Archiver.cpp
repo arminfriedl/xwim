@@ -1,4 +1,5 @@
 #include "Archiver.hpp"
+#include "Formats.hpp"
 
 #include <spdlog/spdlog.h>
 
@@ -37,9 +38,9 @@ fs::path archive_extension(const fs::path& path) {
 
   while (tmp_path.has_extension()) {
     tmp_ext = tmp_path.extension() += tmp_ext;
-    auto search = extensions_format.find(tmp_ext);
+    Format format = find_extension_format(tmp_ext);
 
-    if (search != extensions_format.end()) {
+    if (format != Format::UNKNOWN) {
       // (Combined) extension known. Remember as `ext` and keep
       // looking for even longer extensions.
       ext = tmp_ext;
@@ -76,9 +77,9 @@ fs::path strip_archive_extension(const fs::path& path) {
     tmp_ext = tmp_path.extension() += tmp_ext;
     spdlog::debug("Looking for {} in known extensions", tmp_ext);
 
-    auto search = extensions_format.find(tmp_ext);
+    Format format = find_extension_format(tmp_ext);
     tmp_longest_ext++;
-    if (search != extensions_format.end()) {
+    if (format != Format::UNKNOWN) {
       // (Combined) extension known. Remember as `longest_ext` and keep
       // looking for even longer extensions.
       longest_ext = tmp_longest_ext;
@@ -119,19 +120,22 @@ Format parse_format(const fs::path& path) {
   spdlog::debug("Looking for path {}", path);
   fs::path ext = archive_extension(path);
   spdlog::debug("Looking for ext {}", ext);
-  auto search = extensions_format.find(ext);
-  if (search == extensions_format.end()) {
+  Format format = find_extension_format(ext);
+
+  if (format == Format::UNKNOWN) {
     throw XwimError{"No known archiver for {}", path};
   }
 
-  return search->second;
+  return format;
 }
 
 unique_ptr<Archiver> make_archiver(const string& archive_name) {
   switch (parse_format(archive_name)) {
-    case Format::TAR_GZ:
-    case Format::ZIP:
-      return make_unique<LibArchiver>();
+      case Format::TAR_GZIP:      case Format::TAR_BZIP2:
+      case Format::TAR_COMPRESS:  case Format::TAR_LZIP:
+      case Format::TAR_XZ:        case Format::TAR_ZSTD:
+      case Format::ZIP:
+          return make_unique<LibArchiver>();
     default:
       throw XwimError{
           "Cannot construct archiver for {}. `extension_format` surjection "
