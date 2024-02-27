@@ -1,13 +1,11 @@
 #include <spdlog/common.h>
-#include <spdlog/logger.h>
 #include <spdlog/spdlog.h>
 
 #include <cstdlib>
 #include <filesystem>
-#include <optional>
 
-#include "UserOpt.hpp"
 #include "UserIntent.hpp"
+#include "UserOpt.hpp"
 #include "util/Common.hpp"
 #include "util/Log.hpp"
 

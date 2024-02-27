@@ -1,11 +1,6 @@
 #include "UserOpt.hpp"
 
-#include <tclap/ArgException.h>
 #include <tclap/CmdLine.h>
-#include <tclap/StdOutput.h>
-#include <tclap/SwitchArg.h>
-#include <tclap/UnlabeledMultiArg.h>
-#include <tclap/ValueArg.h>
 
 template <>
 struct TCLAP::ArgTraits<std::filesystem::path> {
