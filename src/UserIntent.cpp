@@ -7,97 +7,113 @@
 #include "Archiver.hpp"
 
 namespace xwim {
+    unique_ptr<UserIntent> make_compress_intent(const UserOpt &userOpt) {
+        if (userOpt.paths.size() == 1) {
+            return make_unique<CompressSingleIntent>(
+                CompressSingleIntent{
+                *userOpt.paths.begin(),
+                userOpt.out
+            });
+        }
+
+        if (!userOpt.out.has_value()) {
+            throw XwimError("Cannot guess output for multiple targets");
+        }
+
+        return make_unique<CompressManyIntent>(
+            CompressManyIntent{
+            userOpt.paths,
+            userOpt.out.value()
+        });
+    }
+
+    unique_ptr<UserIntent> make_extract_intent(const UserOpt &userOpt) {
+        for (const path& p: userOpt.paths) {
+            if (!can_handle_archive(p)) {
+                throw XwimError("Cannot extract path {}", p);
+            }
+        }
+
+        return make_unique<ExtractIntent>(
+            ExtractIntent{
+            userOpt.paths,
+            userOpt.out
+        });
+    }
+
+    unique_ptr<UserIntent> try_infer_compress_intent(const UserOpt &userOpt) {
+      if(!userOpt.out.has_value()) {
+        spdlog::debug("No <out> provided");
+        if(userOpt.paths.size() != 1) {
+          spdlog::debug("Not a single-path compression. Cannot guess <out> for many-path compression");
+          return nullptr;
+        }
+
+        spdlog::debug("Only one <path> provided. Assume single-path compression.");
+        return make_unique<CompressSingleIntent>(CompressSingleIntent{*userOpt.paths.begin(), userOpt.out});
+      }
+
+      spdlog::debug("<out> provided: {}", userOpt.out.value());
+      if(can_handle_archive(userOpt.out.value())) {
+          spdlog::debug("{} given and a known archive format, assume compression", userOpt.out.value());
+          return make_compress_intent(userOpt);
+      }
+
+      spdlog::debug("Cannot compress multiple paths without a user-provided output archive");
+      return nullptr;
+    }
+
+    unique_ptr<UserIntent> try_infer_extract_intent(const UserOpt &userOpt) {
+      bool can_extract_all = std::all_of(
+          userOpt.paths.begin(), userOpt.paths.end(),
+          [](const path &path) { return can_handle_archive(path); });
+
+      if(!can_extract_all) {
+        spdlog::debug("Cannot extract all provided <paths>. Assume this is not an extraction.");
+        for(const path& p: userOpt.paths) {
+          if(!can_handle_archive(p)) {
+            spdlog::debug("Cannot handle {}", p);
+          }
+        }
+
+        return nullptr;
+      }
+
+      if(userOpt.out.has_value() && can_handle_archive(userOpt.out.value())) {
+        spdlog::debug("Could extract all provided <paths>. But also {} looks like an archive. Ambiguous intent. Assume this is not an extraction.", userOpt.out.value());
+        return nullptr;
+      }
+
+      spdlog::debug("Could extract all provided <paths>. But also <out> looks like an archive. Ambiguous intent. Assume this is not an extraction.");
+      return make_extract_intent(userOpt);
+    }
 
     unique_ptr<UserIntent> make_intent(const UserOpt &userOpt) {
         if (userOpt.wants_compress() && userOpt.wants_extract()) {
             throw XwimError("Cannot compress and extract simultaneously");
         }
-        if(userOpt.paths.size() == 0) {
+        if(userOpt.paths.empty()) {
             throw XwimError("No input given...");
         }
 
-        // compression intent explicitly specified
-        if (userOpt.wants_compress()) {
-            if (userOpt.paths.size() == 1) {
-                return make_unique<CompressSingleIntent>(
-                        CompressSingleIntent{
-                                *userOpt.paths.begin(),
-                                userOpt.out
-                        });
-            }
+        // explicitly specified intent
+        if (userOpt.wants_compress()) return make_compress_intent(userOpt);
+        if (userOpt.wants_extract()) return make_extract_intent(userOpt);
 
-            if (!userOpt.out.has_value()) {
-                throw XwimError("Cannot guess output for multiple targets");
-            }
+        spdlog::info("Intent not explicitly provided, trying to infer intent");
 
-            return make_unique<CompressManyIntent>(
-                    CompressManyIntent{
-                            userOpt.paths,
-                            userOpt.out.value()
-                    });
+        if(auto intent = try_infer_extract_intent(userOpt)) {
+          spdlog::info("Extraction intent inferred");
+          return intent;
         }
+        spdlog::info("Cannot infer extraction intent");
 
-        // extraction intent explicitly specified
-        if (userOpt.wants_extract()) {
-            for (path p: userOpt.paths) {
-                if (!can_handle_archive(p)) {
-                    throw XwimError("Cannot extract path {}", p);
-                }
-            }
-
-            return make_unique<ExtractIntent>(
-                    ExtractIntent{
-                            userOpt.paths,
-                            userOpt.out
-                    });
+        if(auto intent = try_infer_compress_intent(userOpt)) {
+          spdlog::info("Compression intent inferred");
+          return intent;
         }
+        spdlog::info("Cannot infer compression intent");
 
-        // no intent explicitly specified, try to infer from input
-
-        bool can_extract_all = std::all_of(
-                userOpt.paths.begin(), userOpt.paths.end(),
-                [](path path) {
-                    return can_handle_archive(path);
-                });
-
-        bool is_out_archive = userOpt.out.has_value() && can_handle_archive(userOpt.out.value());
-
-        // out is explicitly specified and an archive, assume we want compression
-        if(is_out_archive) {
-            if(userOpt.paths.size() == 1) {
-                return make_unique<CompressSingleIntent>(
-                        CompressSingleIntent{
-                           *userOpt.paths.begin(),
-                           userOpt.out
-                        });
-            }
-
-            return make_unique<CompressManyIntent>(
-                    CompressManyIntent{
-                        userOpt.paths,
-                        userOpt.out.value() // this is ok is_out_archive checks for has_value()
-                    }
-            );
-        }
-
-        // all inputs are extractable archives, assume extraction intent
-        if (can_extract_all) {
-            return make_unique<ExtractIntent>(
-                    ExtractIntent{
-                            userOpt.paths,
-                            userOpt.out
-                    });
-        }
-
-        // at this point all we can hope for is that the intention is a single-path compression:
-        // we don't know how to extract it; we don't know (and can't guess) output for many-path compression;
-        if(userOpt.paths.size() == 1) {
-            return make_unique<CompressSingleIntent>(
-                    CompressSingleIntent{
-                        *userOpt.paths.begin(),
-                        userOpt.out
-                    });
-        }
 
         throw XwimError("Cannot guess intent");
     }

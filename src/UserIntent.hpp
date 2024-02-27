@@ -32,9 +32,9 @@ private:
 
 public:
     ExtractIntent(set<path> archives, optional<path> out): archives(archives), out(out) {};
-    ~ExtractIntent() = default;
+    ~ExtractIntent() override = default;
 
-    void execute();
+    void execute() override;
 };
 
 /**
@@ -55,14 +55,13 @@ public:
 class CompressSingleIntent : public UserIntent {
 private:
     path in;
-    optional <path> out;
+    optional<path> out;
 
 public:
-    CompressSingleIntent(path in, optional <path> out) : UserIntent(), in(in), out(out) {};
+    CompressSingleIntent(path in, optional<path> out) : UserIntent(), in(in), out(out) {};
+    ~CompressSingleIntent() override = default;
 
-    ~CompressSingleIntent() = default;
-
-    void execute();
+    void execute() override;
 };
 
 /**
@@ -81,9 +80,9 @@ private:
 
 public:
     CompressManyIntent(set<path> in_paths, path out): UserIntent(), in_paths(in_paths), out(out) {};
-    ~CompressManyIntent() = default;
+    ~CompressManyIntent() override = default;
 
-    void execute();
+    void execute() override;
 };
 
 }  // namespace xwim
