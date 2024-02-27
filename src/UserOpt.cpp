@@ -42,7 +42,7 @@ UserOpt::UserOpt(int argc, char** argv) {
   if (arg_outfile.isSet()) this->out = arg_outfile.getValue();
 
   this->verbosity = arg_verbose.getValue();
-  this->interactive = arg_extract.getValue();
+  this->interactive = !arg_noninteractive.getValue();
 
   if (arg_paths.isSet()) {
     this->paths =
