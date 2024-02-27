@@ -28,6 +28,9 @@ UserOpt::UserOpt(int argc, char** argv) {
   TCLAP::ValueArg<fs::path> arg_outfile
     {"o", "out", "Out <file-or-path>", false, fs::path{}, "A path on the filesystem", cmd};
 
+  TCLAP::MultiSwitchArg arg_verbose
+    {"v", "verbose", "Verbosity level", cmd, 0};
+
   TCLAP::UnlabeledMultiArg<fs::path> arg_paths
     {"files", "Archive(s) to extract or file(s) to compress", true, "A path on the filesystem", cmd};
   // clang-format on
@@ -38,6 +41,7 @@ UserOpt::UserOpt(int argc, char** argv) {
   if (arg_extract.isSet()) this->extract = arg_extract.getValue();
   if (arg_outfile.isSet()) this->out = arg_outfile.getValue();
 
+  this->verbosity = arg_verbose.getValue();
   this->interactive = arg_extract.getValue();
 
   if (arg_paths.isSet()) {

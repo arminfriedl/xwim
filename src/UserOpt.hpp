@@ -13,6 +13,7 @@ struct UserOpt {
   optional<bool> compress;
   optional<bool> extract;
   bool interactive;
+  int verbosity;
   std::optional<fs::path> out;
   std::set<fs::path> paths;
 

@@ -1,6 +1,7 @@
 #pragma once
 #include <spdlog/common.h>
 #include <spdlog/spdlog.h>
+
 #include <cstdlib>
 #ifdef NDEBUG
 #define XWIM_LOGLEVEL SPDLOG_LEVEL_ERROR
@@ -57,7 +58,27 @@ spdlog::level::level_enum _init_from_compile() {
  * The determined level is then set for the default logger via
  * `spdlog::set_level`.
  */
-void init(spdlog::level::level_enum level = spdlog::level::level_enum::off) {
+void init(int verbosity = -1,
+          spdlog::level::level_enum level = spdlog::level::level_enum::off) {
+  if (verbosity != -1) {
+    switch (verbosity) {
+      case 0:
+        spdlog::set_level(spdlog::level::off);
+        break;
+      case 1:
+        spdlog::set_level(spdlog::level::info);
+        break;
+      case 2:
+        spdlog::set_level(spdlog::level::debug);
+        break;
+      case 3:
+      default:
+        spdlog::set_level(spdlog::level::trace);
+        break;
+    }
+    return;
+  }
+
   if (spdlog::level::level_enum::off != level) {
     spdlog::set_level(level);
     return;
