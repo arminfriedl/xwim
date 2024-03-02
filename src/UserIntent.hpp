@@ -30,7 +30,10 @@ private:
     set<path> archives;
     optional<path> out;
 
-public:
+    void dwim_reparent(const path& out);
+    path out_path(const path& p);
+
+   public:
     ExtractIntent(set<path> archives, optional<path> out): archives(archives), out(out) {};
     ~ExtractIntent() override = default;
 

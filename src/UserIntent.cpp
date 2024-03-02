@@ -120,76 +120,92 @@ unique_ptr<UserIntent> make_intent(const UserOpt &userOpt) {
   throw XwimError("Cannot guess intent");
 }
 
-void ExtractIntent::execute() {
-  bool has_out = this->out.has_value();
-  bool is_single = this->archives.size() == 1;
+void ExtractIntent::dwim_reparent(const path &out) {
+  // move extraction if extraction resulted in only one entry and that entries
+  // name is already the stripped archive name, i.e. reduce unnecessary nesting
+  auto dit = std::filesystem::directory_iterator(out);
+  auto dit_path = dit->path();
 
-  for (const path &p : this->archives) {
-    unique_ptr<Archiver> archiver = make_archiver(p);
-    path out;
-
-    if (has_out) {
-      if (is_single) {  // just dump content of archive into `out`
-        std::filesystem::create_directories(this->out.value());
-        out = this->out.value();
-      } else {  // create an `out` folder and extract inside there
-        std::filesystem::create_directories(this->out.value());
-        out = this->out.value() / strip_archive_extension(p);
-      }
-    } else {
-      out = std::filesystem::current_path() / strip_archive_extension(p);
-      std::filesystem::create_directories(out);
-    }
-
-    archiver->extract(p, out);
-
-    // move folder if only one entry and that entries name is already
-    // the stripped archive name
-    auto dit = std::filesystem::directory_iterator(out);
-
-    if (dit == std::filesystem::directory_iterator()) {
-      spdlog::debug("Archive is empty");
-    } else if (is_directory(dit->path())) {
-      auto first_path = dit->path();
-      auto next_entry = next(dit);
-
-      if (next_entry == std::filesystem::directory_iterator()) {
-        spdlog::debug("Archive has single entry which is a directory");
-        if (std::filesystem::equivalent(first_path.filename(),
-                                        out.filename())) {
-          spdlog::debug("Archive entry named like archive");
-          int i = rand_int(0, 100000);
-
-          path tmp_out = path{out};
-          tmp_out.concat(fmt::format(".xwim{}", i));
-
-          spdlog::debug("Moving {} to {}", first_path, tmp_out);
-          std::filesystem::rename(first_path, tmp_out);
-          spdlog::debug("Removing parent {}", out);
-          std::filesystem::remove(out);
-          spdlog::debug("Moving {} to {}", tmp_out, out);
-          std::filesystem::rename(tmp_out, out);
-
-        } else {
-          spdlog::debug("Archive entry differs from archive name");
-        }
-      } else {
-        spdlog::debug("Archive has multiple entries");
-      }
-    }
+  if (dit == std::filesystem::directory_iterator()) {
+    spdlog::debug(
+        "Cannot flatten extraction folder: extraction folder is empty");
+    return;
   }
-};
+
+  if (!is_directory(dit_path)) {
+    spdlog::debug("Cannot flatten extraction folder: {} is not a directory",
+                  dit_path);
+    return;
+  }
+
+  if (next(dit) != std::filesystem::directory_iterator()) {
+    spdlog::debug("Cannot flatten extraction folder: multiple items extracted");
+    return;
+  }
+
+  if (!std::filesystem::equivalent(dit_path.filename(), out.filename())) {
+    spdlog::debug(
+        "Cannot flatten extraction folder: archive entry differs from archive "
+        "name [extraction folder: {}, archive entry: {}]",
+        out.filename(), dit_path.filename());
+    return;
+  }
+
+  spdlog::debug("Output folder [{}] is equivalent to archive entry [{}]", out,
+                dit_path);
+  spdlog::info("Flattening extraction folder");
+
+  int i = rand_int(0, 100000);
+  path tmp_out = path{out};
+  tmp_out.concat(fmt::format(".xwim{}", i));
+  spdlog::debug("Move {} to {}", dit_path, tmp_out);
+  std::filesystem::rename(dit_path, tmp_out);
+  spdlog::debug("Remove parent path {}", out);
+  std::filesystem::remove(out);
+  spdlog::debug("Moving {} to {}", tmp_out, out);
+  std::filesystem::rename(tmp_out, out);
+}
+
+path ExtractIntent::out_path(const path &p) {
+  if (!this->out.has_value()) {
+    // not out path given, create from archive name
+    path out = std::filesystem::current_path() / strip_archive_extension(p);
+    create_directories(out);
+    return out;
+  }
+
+  if (this->archives.size() == 1) {
+    // out given and only one archive to extract, just extract into `out`
+    create_directories(this->out.value());
+    return this->out.value();
+  }
+
+  // out given and multiple archives to extract, create subfolder
+  // for each archive
+  create_directories(this->out.value());
+  path out = this->out.value() / strip_archive_extension(p);
+  return out;
+}
+
+void ExtractIntent::execute() {
+  for (const path &p : this->archives) {
+    std::unique_ptr<Archiver> archiver = make_archiver(p);
+    path out = this->out_path(p);
+    archiver->extract(p, out);
+    this->dwim_reparent(out);
+  }
+}
 
 path CompressSingleIntent::out_path() {
-   if (this->out.has_value()) {
-     if (!can_handle_archive(this->out.value())) {
-       throw XwimError("Unknown archive format {}", this->out.value());
-     }
+  if (this->out.has_value()) {
+    if (!can_handle_archive(this->out.value())) {
+      throw XwimError("Unknown archive format {}", this->out.value());
+    }
 
-     return this->out.value();
-   }
+    return this->out.value();
+  }
 
-   return default_archive(strip_archive_extension(this->in).stem());
+  return default_archive(strip_archive_extension(this->in).stem());
 }
 
 void CompressSingleIntent::execute() {
@@ -206,5 +222,5 @@ void CompressManyIntent::execute() {
 
   unique_ptr<Archiver> archiver = make_archiver(this->out);
   archiver->compress(this->in_paths, this->out);
-};
+}
 }  // namespace xwim
