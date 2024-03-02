@@ -180,21 +180,23 @@ void ExtractIntent::execute() {
   }
 };
 
-void CompressSingleIntent::execute() {
-  if (this->out.has_value()) {
-    if (!can_handle_archive(this->out.value())) {
-      throw XwimError("Unknown archive format {}", this->out.value());
-    }
+path CompressSingleIntent::out_path() {
+   if (this->out.has_value()) {
+     if (!can_handle_archive(this->out.value())) {
+       throw XwimError("Unknown archive format {}", this->out.value());
+     }
 
-    unique_ptr<Archiver> archiver = make_archiver(this->out.value());
-    set<path> ins{this->in};
-    archiver->compress(ins, this->out.value());
-  } else {
-    path out = default_archive(strip_archive_extension(this->in).stem());
-    unique_ptr<Archiver> archiver = make_archiver(out);
-    set<path> ins{this->in};
-    archiver->compress(ins, out);
-  }
+     return this->out.value();
+   }
+
+   return default_archive(strip_archive_extension(this->in).stem());
+}
+
+void CompressSingleIntent::execute() {
+  path out = this->out_path();
+  unique_ptr<Archiver> archiver = make_archiver(out);
+  set<path> ins{this->in};
+  archiver->compress(ins, out);
 };
 
 void CompressManyIntent::execute() {

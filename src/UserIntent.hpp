@@ -57,6 +57,8 @@ private:
     path in;
     optional<path> out;
 
+    path out_path();
+
 public:
     CompressSingleIntent(path in, optional<path> out) : UserIntent(), in(in), out(out) {};
     ~CompressSingleIntent() override = default;
